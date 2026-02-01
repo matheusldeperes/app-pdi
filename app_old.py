@@ -41,14 +41,14 @@ def conectar_google_sheets():
                 scopes=SCOPES
             )
         else:
-            st.error("Credenciais do Google não encontradas!")
-            st.info("Configure as credenciais em .streamlit/secrets.toml ou service_account.json")
+            st.error("❌ Credenciais do Google não encontradas!")
+            st.info("📝 Configure as credenciais em .streamlit/secrets.toml ou service_account.json")
             st.stop()
         
         client = gspread.authorize(credentials)
         return client
     except Exception as e:
-        st.error(f"Erro ao conectar ao Google Sheets: {str(e)}")
+        st.error(f"❌ Erro ao conectar ao Google Sheets: {str(e)}")
         st.stop()
 
 # Função para obter ou criar planilha
@@ -63,11 +63,11 @@ def obter_planilha():
     try:
         # Tenta abrir planilha existente
         spreadsheet = client.open(sheet_name)
-        st.success(f"Conectado à planilha: {sheet_name}")
+        st.success(f"✅ Conectado à planilha: {sheet_name}")
     except gspread.exceptions.SpreadsheetNotFound:
         # Cria nova planilha se não existir
         spreadsheet = client.create(sheet_name)
-        st.success(f"Nova planilha criada: {sheet_name}")
+        st.success(f"✅ Nova planilha criada: {sheet_name}")
     
     # Obtém ou cria a primeira aba
     try:
@@ -110,7 +110,7 @@ def carregar_dados():
         
         return dados
     except Exception as e:
-        st.error(f"Erro ao carregar dados: {str(e)}")
+        st.error(f"❌ Erro ao carregar dados: {str(e)}")
         return {}
 
 # Função para salvar dados no Google Sheets
@@ -147,7 +147,7 @@ def salvar_dados(dados):
         
         return True
     except Exception as e:
-        st.error(f"Erro ao salvar dados: {str(e)}")
+        st.error(f"❌ Erro ao salvar dados: {str(e)}")
         return False
 
 # Função para calcular pontuação total
@@ -157,11 +157,11 @@ def calcular_total(scores):
 # Função para classificar performance
 def classificar_performance(total_pontos):
     if total_pontos >= 31:
-        return "ALTO DESEMPENHO", "#00796B"
+        return "🟢 ALTO DESEMPENHO", "#00A86B"
     elif total_pontos >= 16:
-        return "MANUTENÇÃO", "#E65100"
+        return "🟡 MANUTENÇÃO", "#FFD700"
     else:
-        return "RISCO", "#C62828"
+        return "🔴 RISCO", "#FF6B6B"
 
 # CSS customizado com identidade visual SATTE ALAM MOTORS
 st.markdown("""
@@ -188,7 +188,7 @@ st.markdown("""
     /* Header section */
     .header-section {
         background: linear-gradient(135deg, #D32F2F 0%, #1976D2 100%);
-        padding: 40px;
+        padding: 30px;
         border-radius: 12px;
         color: white;
         margin-bottom: 30px;
@@ -198,15 +198,14 @@ st.markdown("""
     .header-section h1 {
         margin: 0;
         font-weight: 700;
-        font-size: 2.2rem;
+        font-size: 2rem;
         letter-spacing: -0.5px;
     }
     
     .header-section p {
-        margin: 12px 0 0 0;
+        margin: 10px 0 0 0;
         font-size: 1rem;
         opacity: 0.95;
-        font-weight: 500;
     }
     
     /* Metric cards */
@@ -223,44 +222,37 @@ st.markdown("""
     .section-header {
         color: #D32F2F;
         border-bottom: 3px solid #D32F2F;
-        padding-bottom: 12px;
+        padding-bottom: 10px;
         margin-bottom: 20px;
-        margin-top: 20px;
         font-weight: 700;
-        font-size: 1.3rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
     
     /* Status badges */
     .status-high {
         background-color: #C8E6C9;
         color: #00796B;
-        padding: 10px 18px;
+        padding: 8px 16px;
         border-radius: 20px;
         font-weight: 600;
         display: inline-block;
-        border: 2px solid #00796B;
     }
     
     .status-medium {
         background-color: #FFE0B2;
         color: #E65100;
-        padding: 10px 18px;
+        padding: 8px 16px;
         border-radius: 20px;
         font-weight: 600;
         display: inline-block;
-        border: 2px solid #E65100;
     }
     
     .status-low {
         background-color: #FFCDD2;
         color: #C62828;
-        padding: 10px 18px;
+        padding: 8px 16px;
         border-radius: 20px;
         font-weight: 600;
         display: inline-block;
-        border: 2px solid #C62828;
     }
     
     /* Buttons */
@@ -269,11 +261,9 @@ st.markdown("""
         color: white;
         border: none;
         font-weight: 600;
-        padding: 12px 24px;
+        padding: 10px 20px;
         border-radius: 6px;
         transition: all 0.3s ease;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
     
     .stButton > button:hover {
@@ -285,44 +275,21 @@ st.markdown("""
     .stTextInput > div > div > input,
     .stSelectbox > div > div > select,
     .stTextArea > div > div > textarea {
-        border: 2px solid #E0E0E0 !important;
+        border: 2px solid #E0E0E0;
         border-radius: 6px;
-        font-family: 'Roboto', sans-serif;
     }
     
     .stTextInput > div > div > input:focus,
     .stSelectbox > div > div > select:focus,
     .stTextArea > div > div > textarea:focus {
         border-color: #D32F2F !important;
-        box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1) !important;
+        box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
     }
     
     /* Divider */
     hr {
         border-color: #E0E0E0;
         margin: 30px 0;
-    }
-    
-    /* Sidebar */
-    .stSidebar {
-        background-color: #FAFAFA;
-    }
-    
-    .stSidebar .stRadio > div {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    /* DataFrame styling */
-    .dataframe {
-        font-family: 'Roboto', sans-serif;
-    }
-    
-    /* Info/Success/Error boxes */
-    .stAlert {
-        border-radius: 6px;
-        margin: 10px 0;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -344,8 +311,8 @@ modo = st.sidebar.radio(
 
 dados = carregar_dados()
 
-if modo == "Nova Avaliação":
-    st.markdown('<h2 class="section-header">FORMULÁRIO DE AVALIAÇÃO</h2>', unsafe_allow_html=True)
+if modo == "📝 Nova Avaliação":
+    st.header("Formulário de Avaliação")
     
     col1, col2 = st.columns(2)
     
@@ -366,7 +333,7 @@ if modo == "Nova Avaliação":
         )
     
     st.divider()
-    st.markdown('<h3 class="section-header">MATRIZ DE COMPETÊNCIAS</h3>', unsafe_allow_html=True)
+    st.subheader("🎯 Matriz de Competências")
     st.caption("Escala: 1=Insatisfatório, 2=Abaixo da Expectativa, 3=Atende, 4=Supera, 5=Excepcional")
     
     # Critérios de avaliação
@@ -408,33 +375,24 @@ if modo == "Nova Avaliação":
     classificacao, cor = classificar_performance(total_pontos)
     
     st.divider()
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.markdown(f'<h3 class="section-header">Total de Pontos: {total_pontos}/35</h3>', unsafe_allow_html=True)
-    with col2:
-        if "ALTO" in classificacao:
-            st.markdown(f'<div class="status-high">{classificacao}</div>', unsafe_allow_html=True)
-        elif "MANUTENÇÃO" in classificacao:
-            st.markdown(f'<div class="status-medium">{classificacao}</div>', unsafe_allow_html=True)
-        else:
-            st.markdown(f'<div class="status-low">{classificacao}</div>', unsafe_allow_html=True)
+    st.subheader(f"Total de Pontos: {total_pontos}/35 - {classificacao}")
     
     st.divider()
-    st.markdown('<h3 class="section-header">PLANO DE DESENVOLVIMENTO INDIVIDUAL (PDI)</h3>', unsafe_allow_html=True)
+    st.subheader("📋 Plano de Desenvolvimento Individual (PDI)")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown('<h4 style="color: #00796B; margin-top: 0;">O que CONTINUAR fazendo (Pontos Fortes)</h4>', unsafe_allow_html=True)
+        st.subheader("✅ O que CONTINUAR fazendo (Pontos Fortes)")
         ponto_forte_1 = st.text_area("Ponto Forte 1", key="pf1", height=80)
         ponto_forte_2 = st.text_area("Ponto Forte 2", key="pf2", height=80)
     
     with col2:
-        st.markdown('<h4 style="color: #C62828; margin-top: 0;">O que PARAR de fazer (Gargalos)</h4>', unsafe_allow_html=True)
+        st.subheader("❌ O que PARAR de fazer (Gargalos)")
         gargalo_1 = st.text_area("Gargalo 1", key="g1", height=80)
         gargalo_2 = st.text_area("Gargalo 2", key="g2", height=80)
     
-    st.markdown('<h4 style="color: #1976D2; margin-top: 20px;">O que COMEÇAR a desenvolver (Ações de Melhoria)</h4>', unsafe_allow_html=True)
+    st.subheader("🚀 O que COMEÇAR a desenvolver (Ações de Melhoria)")
     
     num_acoes = st.number_input("Quantas ações de melhoria?", min_value=1, max_value=5, value=3)
     
@@ -449,7 +407,7 @@ if modo == "Nova Avaliação":
             acoes_melhoria.append({"acao": acao, "prazo": prazo})
     
     # Botão para salvar
-    if st.button("SALVAR AVALIAÇÃO", use_container_width=True):
+    if st.button("💾 Salvar Avaliação", use_container_width=True):
         if nome_colaborador.strip() and avaliador.strip():
             id_colaborador = f"{nome_colaborador}_{data_avaliacao}"
             
@@ -468,16 +426,16 @@ if modo == "Nova Avaliação":
             }
             
             salvar_dados(dados)
-            st.success(f"Avaliação de {nome_colaborador} salva com sucesso!")
+            st.success(f"✅ Avaliação de {nome_colaborador} salva com sucesso!")
             st.balloons()
         else:
-            st.error("Por favor, preencha Nome do Colaborador e Avaliador")
+            st.error("❌ Por favor, preencha Nome do Colaborador e Avaliador")
 
-elif modo == "Visualizar Colaboradores":
-    st.markdown('<h2 class="section-header">COLABORADORES REGISTRADOS</h2>', unsafe_allow_html=True)
+elif modo == "👥 Visualizar Colaboradores":
+    st.header("Colaboradores Registrados")
     
     if not dados:
-        st.info("Nenhuma avaliação registrada ainda.")
+        st.info("📭 Nenhuma avaliação registrada ainda.")
     else:
         # Criar DataFrame com os dados
         dados_lista = []
@@ -506,13 +464,13 @@ elif modo == "Visualizar Colaboradores":
         col1, col2 = st.columns([3, 1])
         
         with col1:
-            st.markdown(f'<h3 class="section-header">AVALIAÇÃO DE {colaborador_selecionado.upper()}</h3>', unsafe_allow_html=True)
+            st.subheader(f"📋 Avaliação de {colaborador_selecionado}")
         
         with col2:
-            if st.button("DELETAR COLABORADOR", key="btn_delete"):
+            if st.button("🗑️ Deletar Colaborador", key="btn_delete"):
                 del dados[id_selecionado]
                 salvar_dados(dados)
-                st.success(f"{colaborador_selecionado} foi deletado!")
+                st.success(f"✅ {colaborador_selecionado} foi deletado!")
                 st.rerun()
         
         # Informações básicas
@@ -526,7 +484,7 @@ elif modo == "Visualizar Colaboradores":
             st.metric("Classificação", classificacao_texto)
         
         # Scores
-        st.markdown('<h3 class="section-header">NOTAS POR CRITÉRIO</h3>', unsafe_allow_html=True)
+        st.subheader("🎯 Notas por Critério")
         
         col1, col2 = st.columns(2)
         
@@ -562,39 +520,39 @@ elif modo == "Visualizar Colaboradores":
             st.plotly_chart(fig, use_container_width=True)
         
         # PDI
-        st.markdown('<h3 class="section-header">PLANO DE DESENVOLVIMENTO INDIVIDUAL</h3>', unsafe_allow_html=True)
+        st.subheader("📋 Plano de Desenvolvimento Individual")
         
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown('<h4 style="color: #00796B;">Pontos Fortes</h4>', unsafe_allow_html=True)
+            st.markdown("### ✅ Pontos Fortes")
             for i, ponto in enumerate(dados_colaborador["pontos_fortes"], 1):
                 if ponto:
                     st.write(f"• {ponto}")
         
         with col2:
-            st.markdown('<h4 style="color: #C62828;">Gargalos</h4>', unsafe_allow_html=True)
+            st.markdown("### ❌ Gargalos")
             for i, gargalo in enumerate(dados_colaborador["gargalos"], 1):
                 if gargalo:
                     st.write(f"• {gargalo}")
         
-        st.markdown('<h4 style="color: #1976D2;">Ações de Melhoria</h4>', unsafe_allow_html=True)
+        st.markdown("### 🚀 Ações de Melhoria")
         for i, acao in enumerate(dados_colaborador["acoes_melhoria"], 1):
             with st.expander(f"Ação {i}: {acao['acao'][:50]}..."):
                 st.write(f"**Ação:** {acao['acao']}")
                 st.write(f"**Como e Prazos:** {acao['prazo']}")
 
-elif modo == "Relatório":
-    st.markdown('<h2 class="section-header">RELATÓRIO GERAL DE PERFORMANCE</h2>', unsafe_allow_html=True)
+elif modo == "📊 Relatório":
+    st.header("📊 Relatório Geral de Performance")
     
     if not dados:
-        st.info("Nenhuma avaliação registrada ainda.")
+        st.info("📭 Nenhuma avaliação registrada ainda.")
     else:
         # Preparar dados para visualização
         nomes = []
         totais = []
         classificacoes = []
-        cores_map = {"ALTO DESEMPENHO": "#00796B", "MANUTENÇÃO": "#E65100", "RISCO": "#C62828"}
+        cores_map = {"🟢 ALTO DESEMPENHO": "#00A86B", "🟡 MANUTENÇÃO": "#FFD700", "🔴 RISCO": "#FF6B6B"}
         cores = []
         
         for id_col, dados_col in dados.items():
@@ -602,7 +560,7 @@ elif modo == "Relatório":
             totais.append(dados_col["total_pontos"])
             classificacao = dados_col["classificacao"]
             classificacoes.append(classificacao)
-            cores.append(cores_map.get(classificacao, "#1976D2"))
+            cores.append(cores_map.get(classificacao, "#667eea"))
         
         col1, col2, col3 = st.columns(3)
         
@@ -612,7 +570,7 @@ elif modo == "Relatório":
             st.metric("Média de Pontos", f"{sum(totais) / len(totais):.1f}/35")
         with col3:
             alto_desempenho = sum(1 for c in classificacoes if "ALTO" in c)
-            st.metric("Alto Desempenho", alto_desempenho, delta="Excelente")
+            st.metric("Alto Desempenho", alto_desempenho)
         
         st.divider()
         
@@ -620,13 +578,13 @@ elif modo == "Relatório":
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown('<h4 style="color: #D32F2F;">DISTRIBUIÇÃO DE PONTUAÇÕES</h4>', unsafe_allow_html=True)
+            st.subheader("📊 Distribuição de Pontuações")
             
             fig1 = px.bar(
                 x=nomes,
                 y=totais,
                 color=totais,
-                color_continuous_scale=["#C62828", "#E65100", "#00796B"],
+                color_continuous_scale=["#FF6B6B", "#FFD700", "#00A86B"],
                 labels={"y": "Pontos", "x": "Colaborador"},
                 height=400
             )
@@ -634,28 +592,28 @@ elif modo == "Relatório":
             st.plotly_chart(fig1, use_container_width=True)
         
         with col2:
-            st.markdown('<h4 style="color: #D32F2F;">CURVA DE VITALIDADE (DISTRIBUIÇÃO NORMAL)</h4>', unsafe_allow_html=True)
+            st.subheader("📈 Curva de Vitalidade (Distribuição Normal)")
             
             # Criar histograma dos scores
             fig2 = px.histogram(
                 x=totais,
                 nbins=10,
                 labels={"x": "Pontos", "count": "Quantidade"},
-                color_discrete_sequence=["#1976D2"],
+                color_discrete_sequence=["#667eea"],
                 height=400
             )
             
             # Adicionar linhas de referência
-            fig2.add_vline(x=15, line_dash="dash", line_color="#C62828", annotation_text="Risco")
-            fig2.add_vline(x=30, line_dash="dash", line_color="#E65100", annotation_text="Limite Manutenção")
-            fig2.add_vline(x=31, line_dash="dash", line_color="#00796B", annotation_text="Alto Desempenho")
+            fig2.add_vline(x=15, line_dash="dash", line_color="red", annotation_text="Risco")
+            fig2.add_vline(x=30, line_dash="dash", line_color="orange", annotation_text="Limite Manutenção")
+            fig2.add_vline(x=31, line_dash="dash", line_color="green", annotation_text="Alto Desempenho")
             
             st.plotly_chart(fig2, use_container_width=True)
         
         st.divider()
         
         # Tabela resumida
-        st.markdown('<h3 class="section-header">RESUMO DE TODOS OS COLABORADORES</h3>', unsafe_allow_html=True)
+        st.subheader("📋 Resumo de Todos os Colaboradores")
         
         resumo_data = []
         for id_col, dados_col in dados.items():
@@ -673,7 +631,7 @@ elif modo == "Relatório":
         st.divider()
         
         # Análise por critério
-        st.markdown('<h3 class="section-header">ANÁLISE POR CRITÉRIO</h3>', unsafe_allow_html=True)
+        st.subheader("🎯 Análise por Critério")
         
         criterios_medias = {}
         for criterio in ["Organização", "Trabalho em Equipe", "Comunicação e Regras", 
@@ -690,17 +648,11 @@ elif modo == "Relatório":
             x=list(criterios_medias.keys()),
             y=list(criterios_medias.values()),
             labels={"x": "Critério", "y": "Média de Notas"},
-            color_discrete_sequence=["#D32F2F"],
+            color_discrete_sequence=["#667eea"],
             height=400
         )
         st.plotly_chart(fig3, use_container_width=True)
 
 # Footer
 st.divider()
-st.markdown("""
-<div style="text-align: center; color: #757575; margin-top: 30px; font-family: 'Roboto', sans-serif;">
-    <p style="margin: 5px 0;"><strong>SATTE ALAM MOTORS</strong></p>
-    <p style="margin: 5px 0; font-size: 0.9rem;">Todos os dados são salvos automaticamente no Google Sheets</p>
-    <p style="margin: 5px 0; font-size: 0.85rem;">Sistema de Avaliação e PDI v2.0 | Desenvolvido com Streamlit</p>
-</div>
-""", unsafe_allow_html=True)
+st.caption("☁️ Todos os dados são salvos automaticamente no Google Sheets")
