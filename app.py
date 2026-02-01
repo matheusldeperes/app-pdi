@@ -201,36 +201,26 @@ st.markdown("""
         gap: 30px;
     }
     
-    .header-logo {
-        width: 80px;
-        height: 80px;
-        background: white;
-        border-radius: 8px;
+    /* Container do header com fundo preto */
+    [data-testid="stMetricLabel"] {
+        background-color: #000000;
+    }
+    
+    /* Estilo para o container da logo */
+    .logo-container {
+        background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+        padding: 20px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 3rem;
-        font-weight: 900;
-        color: #FF6600;
-        font-family: 'Nasalization Rg', 'Montserrat', sans-serif;
-        flex-shrink: 0;
-        box-shadow: 0 2px 8px rgba(255, 102, 0, 0.2);
     }
     
-    .header-content h1 {
-        margin: 0;
-        font-weight: 700;
-        font-size: 2.2rem;
-        letter-spacing: 0.5px;
-        color: #FFFFFF;
-    }
-    
-    .header-section p {
-        margin: 12px 0 0 0;
-        font-size: 1rem;
-        opacity: 0.95;
-        font-weight: 400;
-        color: #FFFFFF;
+    .header-container {
+        background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+        padding: 20px 30px;
+        border-radius: 12px;
+        margin-bottom: 20px;
     }
     
     /* Metric cards */
@@ -345,14 +335,54 @@ st.markdown("""
 
 # Título principal
 st.markdown("""
-<div class="header-section">
-    <div class="header-logo">SA</div>
-    <div class="header-content">
+<style>
+.header-wrapper {
+    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+    padding: 20px 30px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.header-text h1 {
+    color: #FFFFFF;
+    margin: 0;
+    font-weight: 700;
+    font-size: 2rem;
+    letter-spacing: 0.5px;
+}
+.header-text p {
+    color: #FFFFFF;
+    margin: 8px 0 0 0;
+    font-size: 0.95rem;
+    opacity: 0.95;
+    font-weight: 400;
+}
+</style>
+<div class="header-wrapper">
+    <div style="flex: 1;">
+""", unsafe_allow_html=True)
+
+try:
+    col_logo, col_text = st.columns([0.8, 3])
+    with col_logo:
+        st.image("logo.png", width=90)
+    with col_text:
+        st.markdown("""
+        <div class="header-text">
+            <h1>SISTEMA DE AVALIAÇÃO E PDI</h1>
+            <p>Gestão de Performance e Desenvolvimento Individual | SATTE ALAM MOTORS</p>
+        </div>
+        """, unsafe_allow_html=True)
+except FileNotFoundError:
+    st.markdown("""
+    <div class="header-text">
         <h1>SISTEMA DE AVALIAÇÃO E PDI</h1>
         <p>Gestão de Performance e Desenvolvimento Individual | SATTE ALAM MOTORS</p>
     </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 # Sidebar para gerenciar colaboradores
 st.sidebar.title("GERENCIAMENTO")
