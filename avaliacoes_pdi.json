@@ -1,0 +1,182 @@
+{
+  "João Silva_2026-02-01": {
+    "nome": "João Silva",
+    "avaliador": "Gerente Técnico",
+    "data": "2026-02-01",
+    "scores": {
+      "Organização": 4,
+      "Trabalho em Equipe": 5,
+      "Comunicação e Regras": 4,
+      "Eficiência Técnica": 5,
+      "Qualidade (Retorno)": 4,
+      "Adesão aos Processos": 5,
+      "Capacitação": 4
+    },
+    "observacoes": {
+      "Organização": "Mantém o box sempre organizado e ferramentas bem catalogadas",
+      "Trabalho em Equipe": "Excelente colaboração, sempre ajuda os colegas",
+      "Comunicação e Regras": "Segue rigorosamente os protocolos",
+      "Eficiência Técnica": "Entrega sempre dentro do prazo",
+      "Qualidade (Retorno)": "Trabalho de primeira qualidade",
+      "Adesão aos Processos": "Utiliza todos os checklists corretamente",
+      "Capacitação": "Realizou 2 cursos este período"
+    },
+    "total_pontos": 31,
+    "classificacao": "🟢 ALTO DESEMPENHO",
+    "pontos_fortes": [
+      "Liderança natural e disposição em ensinar novos técnicos",
+      "Qualidade excepcional do trabalho, com zero retrabalhos"
+    ],
+    "gargalos": [
+      "Ocasionalmente quer fazer tudo sozinho em vez de delegar",
+      "Poderia ser mais proativo em registrar suas ações no sistema"
+    ],
+    "acoes_melhoria": [
+      {
+        "acao": "Participar de curso de liderança e gestão de equipes",
+        "prazo": "Próximos 3 meses - 1 curso online por mês"
+      },
+      {
+        "acao": "Treinar para posição de Líder Técnico",
+        "prazo": "Acompanhamento mensal com gerente"
+      },
+      {
+        "acao": "Melhorar documentação de processos no sistema",
+        "prazo": "Diariamente no final do turno"
+      }
+    ],
+    "timestamp": "2026-02-01T14:30:00"
+  },
+  "Maria Santos_2026-02-01": {
+    "nome": "Maria Santos",
+    "avaliador": "Gerente Técnico",
+    "data": "2026-02-01",
+    "scores": {
+      "Organização": 3,
+      "Trabalho em Equipe": 3,
+      "Comunicação e Regras": 3,
+      "Eficiência Técnica": 3,
+      "Qualidade (Retorno)": 2,
+      "Adesão aos Processos": 3,
+      "Capacitação": 2
+    },
+    "observacoes": {
+      "Organização": "Box organizado, mas algumas ferramentas deslocadas",
+      "Trabalho em Equipe": "Trabalha bem, mas poderia ser mais proativa",
+      "Comunicação e Regras": "Cumpre as normas adequadamente",
+      "Eficiência Técnica": "Entrega no prazo geralmente",
+      "Qualidade (Retorno)": "Teve alguns retrabalhos este período",
+      "Adesão aos Processos": "Segue os processos adequadamente",
+      "Capacitação": "Não realizou cursos este período"
+    },
+    "total_pontos": 19,
+    "classificacao": "🟡 MANUTENÇÃO",
+    "pontos_fortes": [
+      "Responsabilidade e pontualidade",
+      "Bom relacionamento com colegas"
+    ],
+    "gargalos": [
+      "Qualidade do trabalho precisa melhorar",
+      "Pouca iniciativa em se capacitar"
+    ],
+    "acoes_melhoria": [
+      {
+        "acao": "Programa de qualidade - revisar checklist de aceitação",
+        "prazo": "Próximas 2 semanas - treinamento prático"
+      },
+      {
+        "acao": "Cursos de desenvolvimento técnico",
+        "prazo": "1 curso online em março, 1 em abril"
+      }
+    ],
+    "timestamp": "2026-02-01T15:00:00"
+  },
+  "Carlos Oliveira_2026-02-01": {
+    "nome": "Carlos Oliveira",
+    "avaliador": "Gerente Técnico",
+    "data": "2026-02-01",
+    "scores": {
+      "Organização": 1,
+      "Trabalho em Equipe": 2,
+      "Comunicação e Regras": 1,
+      "Eficiência Técnica": 2,
+      "Qualidade (Retorno)": 1,
+      "Adesão aos Processos": 1,
+      "Capacitação": 0
+    },
+    "observacoes": {
+      "Organização": "Box desorganizado, ferramentas espalhadas",
+      "Trabalho em Equipe": "Conflitos frequentes com colegas",
+      "Comunicação e Regras": "Não segue protocolos",
+      "Eficiência Técnica": "Atrasos frequentes nas entregas",
+      "Qualidade (Retorno)": "Múltiplos retrabalhos",
+      "Adesão aos Processos": "Não utiliza checklists",
+      "Capacitação": "Recusa participar de treinamentos"
+    },
+    "total_pontos": 8,
+    "classificacao": "🔴 RISCO",
+    "pontos_fortes": [
+      "Excelente conhecimento técnico prático",
+      "Experiência anterior em atividades similares"
+    ],
+    "gargalos": [
+      "Comportamento inadequado e desrespeito às normas",
+      "Falta de engajamento com equipe e processos"
+    ],
+    "acoes_melhoria": [
+      {
+        "acao": "Plano de desempenho com metas claras",
+        "prazo": "Começar imediatamente, revisão semanal"
+      },
+      {
+        "acao": "Treinamento de comportamento e trabalho em equipe",
+        "prazo": "Próxima semana - obrigatório"
+      }
+    ],
+    "timestamp": "2026-02-01T15:30:00"
+  },
+  "guilherme_2026-02-01": {
+    "nome": "guilherme",
+    "avaliador": "peres",
+    "data": "2026-02-01",
+    "scores": {
+      "Organização": 2,
+      "Trabalho em Equipe": 2,
+      "Comunicação e Regras": 1,
+      "Eficiência Técnica": 2,
+      "Qualidade (Retorno)": 2,
+      "Adesão aos Processos": 2,
+      "Capacitação": 2
+    },
+    "observacoes": {
+      "Organização": "",
+      "Trabalho em Equipe": "",
+      "Comunicação e Regras": "",
+      "Eficiência Técnica": "",
+      "Qualidade (Retorno)": "",
+      "Adesão aos Processos": "",
+      "Capacitação": ""
+    },
+    "total_pontos": 13,
+    "classificacao": "🔴 RISCO",
+    "pontos_fortes": [
+      "trabalho",
+      "subordinação"
+    ],
+    "gargalos": [
+      "atrasos",
+      "desconcentração"
+    ],
+    "acoes_melhoria": [
+      {
+        "acao": "organizar-se melhor",
+        "prazo": "3 meses"
+      },
+      {
+        "acao": "procurar não dar retorno, melhorar técnica",
+        "prazo": "3 meses"
+      }
+    ],
+    "timestamp": "2026-02-01T01:13:23.504399"
+  }
+}
