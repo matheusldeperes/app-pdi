@@ -6,6 +6,8 @@ from datetime import datetime
 import plotly.graph_objects as go
 import plotly.express as px
 from pathlib import Path
+import gspread
+from google.oauth2.service_account import Credentials
 
 # Configuração da página
 st.set_page_config(
@@ -14,23 +16,139 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Arquivo de armazenamento de dados
-DATA_FILE = "avaliacoes_pdi.json"
+# Configuração do Google Sheets
+SCOPES = [
+    'https://www.googleapis.com/auth/spreadsheets',
+    'https://www.googleapis.com/auth/drive'
+]
 
-# Função para carregar dados
+# Função para conectar ao Google Sheets
+@st.cache_resource
+def conectar_google_sheets():
+    """Conecta ao Google Sheets usando credenciais do Streamlit Secrets"""
+    try:
+        # Tenta carregar credenciais do Streamlit Secrets (para Streamlit Cloud)
+        if "gcp_service_account" in st.secrets:
+            credentials_dict = dict(st.secrets["gcp_service_account"])
+            credentials = Credentials.from_service_account_info(
+                credentials_dict,
+                scopes=SCOPES
+            )
+        # Fallback para arquivo local (desenvolvimento)
+        elif os.path.exists("service_account.json"):
+            credentials = Credentials.from_service_account_file(
+                "service_account.json",
+                scopes=SCOPES
+            )
+        else:
+            st.error("❌ Credenciais do Google não encontradas!")
+            st.info("📝 Configure as credenciais em .streamlit/secrets.toml ou service_account.json")
+            st.stop()
+        
+        client = gspread.authorize(credentials)
+        return client
+    except Exception as e:
+        st.error(f"❌ Erro ao conectar ao Google Sheets: {str(e)}")
+        st.stop()
+
+# Função para obter ou criar planilha
+@st.cache_resource
+def obter_planilha():
+    """Obtém ou cria a planilha de avaliações"""
+    client = conectar_google_sheets()
+    
+    # Nome da planilha (pode ser configurado)
+    sheet_name = st.secrets.get("sheet_name", "Avaliações PDI - SATTE ALAM")
+    
+    try:
+        # Tenta abrir planilha existente
+        spreadsheet = client.open(sheet_name)
+        st.success(f"✅ Conectado à planilha: {sheet_name}")
+    except gspread.exceptions.SpreadsheetNotFound:
+        # Cria nova planilha se não existir
+        spreadsheet = client.create(sheet_name)
+        st.success(f"✅ Nova planilha criada: {sheet_name}")
+    
+    # Obtém ou cria a primeira aba
+    try:
+        worksheet = spreadsheet.worksheet("Avaliações")
+    except:
+        worksheet = spreadsheet.add_worksheet(title="Avaliações", rows=1000, cols=20)
+        # Adiciona cabeçalhos
+        headers = ["ID", "Nome", "Avaliador", "Data", "Scores_JSON", "Observacoes_JSON", 
+                   "Total_Pontos", "Classificacao", "Pontos_Fortes_JSON", "Gargalos_JSON", 
+                   "Acoes_Melhoria_JSON", "Timestamp"]
+        worksheet.update('A1:L1', [headers])
+    
+    return worksheet
+
+# Função para carregar dados do Google Sheets
 def carregar_dados():
-    if os.path.exists(DATA_FILE):
-        try:
-            with open(DATA_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except:
-            return {}
-    return {}
+    """Carrega dados do Google Sheets e converte para formato dict"""
+    try:
+        worksheet = obter_planilha()
+        records = worksheet.get_all_records()
+        
+        # Converter para formato dict
+        dados = {}
+        for record in records:
+            if record.get('ID'):
+                id_col = record['ID']
+                dados[id_col] = {
+                    'nome': record.get('Nome', ''),
+                    'avaliador': record.get('Avaliador', ''),
+                    'data': record.get('Data', ''),
+                    'scores': json.loads(record.get('Scores_JSON', '{}')),
+                    'observacoes': json.loads(record.get('Observacoes_JSON', '{}')),
+                    'total_pontos': record.get('Total_Pontos', 0),
+                    'classificacao': record.get('Classificacao', ''),
+                    'pontos_fortes': json.loads(record.get('Pontos_Fortes_JSON', '[]')),
+                    'gargalos': json.loads(record.get('Gargalos_JSON', '[]')),
+                    'acoes_melhoria': json.loads(record.get('Acoes_Melhoria_JSON', '[]')),
+                    'timestamp': record.get('Timestamp', '')
+                }
+        
+        return dados
+    except Exception as e:
+        st.error(f"❌ Erro ao carregar dados: {str(e)}")
+        return {}
 
-# Função para salvar dados
+# Função para salvar dados no Google Sheets
 def salvar_dados(dados):
-    with open(DATA_FILE, 'w', encoding='utf-8') as f:
-        json.dump(dados, f, ensure_ascii=False, indent=2)
+    """Salva dados no Google Sheets"""
+    try:
+        worksheet = obter_planilha()
+        
+        # Limpa todos os dados (exceto cabeçalho)
+        worksheet.delete_rows(2, worksheet.row_count)
+        
+        # Prepara dados para inserção
+        rows = []
+        for id_col, info in dados.items():
+            row = [
+                id_col,
+                info.get('nome', ''),
+                info.get('avaliador', ''),
+                info.get('data', ''),
+                json.dumps(info.get('scores', {}), ensure_ascii=False),
+                json.dumps(info.get('observacoes', {}), ensure_ascii=False),
+                info.get('total_pontos', 0),
+                info.get('classificacao', ''),
+                json.dumps(info.get('pontos_fortes', []), ensure_ascii=False),
+                json.dumps(info.get('gargalos', []), ensure_ascii=False),
+                json.dumps(info.get('acoes_melhoria', []), ensure_ascii=False),
+                info.get('timestamp', '')
+            ]
+            rows.append(row)
+        
+        # Insere todos os dados de uma vez
+        if rows:
+            worksheet.update(f'A2:L{len(rows)+1}', rows)
+        
+        return True
+    except Exception as e:
+        st.error(f"❌ Erro ao salvar dados: {str(e)}")
+        return False
 
 # Função para calcular pontuação total
 def calcular_total(scores):
@@ -426,4 +544,4 @@ elif modo == "📊 Relatório":
 
 # Footer
 st.divider()
-st.caption("💾 Todos os dados são salvos automaticamente em: avaliacoes_pdi.json")
+st.caption("☁️ Todos os dados são salvos automaticamente no Google Sheets")
