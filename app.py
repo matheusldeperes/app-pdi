@@ -368,7 +368,7 @@ st.markdown("""
 try:
     col_logo, col_text = st.columns([0.8, 3])
     with col_logo:
-        st.image("logo.png", width=90)
+        st.image("logo.png", width=180)
     with col_text:
         st.markdown("""
         <div class="header-text">
