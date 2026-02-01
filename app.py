@@ -165,48 +165,72 @@ def classificar_performance(total_pontos):
 
 # CSS customizado com identidade visual SATTE ALAM MOTORS
 st.markdown("""
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-    /* Cores corporativas */
+    /* Cores corporativas SATTE ALAM */
     :root {
-        --primary-color: #D32F2F;
-        --secondary-color: #1976D2;
-        --accent-color: #F57C00;
-        --success-color: #00796B;
-        --warning-color: #F57F17;
-        --danger-color: #C62828;
-        --text-primary: #212121;
-        --text-secondary: #757575;
+        --primary-color: #000000;        /* Preto - Principal */
+        --secondary-color: #FFFFFF;      /* Branco - Complementar */
+        --accent-color: #FF6600;         /* Laranja - Pós Vendas */
+        --support-color: #4c4c4c;        /* Cinza - De apoio */
+        --text-primary: #000000;
+        --text-secondary: #4c4c4c;
         --bg-light: #FAFAFA;
         --border-color: #E0E0E0;
     }
     
-    /* Fonte personalizada */
+    /* Fonte personalizada - Montserrat */
+    * {
+        font-family: 'Montserrat', 'Segoe UI', sans-serif;
+    }
+    
     body {
-        font-family: 'Roboto', 'Segoe UI', sans-serif;
+        font-family: 'Montserrat', 'Segoe UI', sans-serif;
     }
     
     /* Header section */
     .header-section {
-        background: linear-gradient(135deg, #D32F2F 0%, #1976D2 100%);
+        background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
         padding: 40px;
         border-radius: 12px;
         color: white;
         margin-bottom: 30px;
-        box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 30px;
     }
     
-    .header-section h1 {
+    .header-logo {
+        width: 80px;
+        height: 80px;
+        background: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: 900;
+        color: #FF6600;
+        font-family: 'Nasalization Rg', 'Montserrat', sans-serif;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(255, 102, 0, 0.2);
+    }
+    
+    .header-content h1 {
         margin: 0;
         font-weight: 700;
         font-size: 2.2rem;
-        letter-spacing: -0.5px;
+        letter-spacing: 0.5px;
+        color: #FFFFFF;
     }
     
     .header-section p {
         margin: 12px 0 0 0;
         font-size: 1rem;
         opacity: 0.95;
-        font-weight: 500;
+        font-weight: 400;
+        color: #FFFFFF;
     }
     
     /* Metric cards */
@@ -214,15 +238,15 @@ st.markdown("""
         background: linear-gradient(135deg, #F5F5F5 0%, #FFFFFF 100%);
         padding: 20px;
         border-radius: 10px;
-        border-left: 4px solid #D32F2F;
+        border-left: 4px solid #FF6600;
         margin: 10px 0;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     
     /* Section headers */
     .section-header {
-        color: #D32F2F;
-        border-bottom: 3px solid #D32F2F;
+        color: #000000;
+        border-bottom: 3px solid #FF6600;
         padding-bottom: 12px;
         margin-bottom: 20px;
         margin-top: 20px;
@@ -234,38 +258,38 @@ st.markdown("""
     
     /* Status badges */
     .status-high {
-        background-color: #C8E6C9;
-        color: #00796B;
+        background-color: #E8F5E9;
+        color: #1B5E20;
         padding: 10px 18px;
         border-radius: 20px;
         font-weight: 600;
         display: inline-block;
-        border: 2px solid #00796B;
+        border: 2px solid #4CAF50;
     }
     
     .status-medium {
-        background-color: #FFE0B2;
+        background-color: #FFF3E0;
         color: #E65100;
         padding: 10px 18px;
         border-radius: 20px;
         font-weight: 600;
         display: inline-block;
-        border: 2px solid #E65100;
+        border: 2px solid #FF6600;
     }
     
     .status-low {
-        background-color: #FFCDD2;
+        background-color: #FFEBEE;
         color: #C62828;
         padding: 10px 18px;
         border-radius: 20px;
         font-weight: 600;
         display: inline-block;
-        border: 2px solid #C62828;
+        border: 2px solid #D32F2F;
     }
     
     /* Buttons */
     .stButton > button {
-        background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
+        background: linear-gradient(135deg, #FF6600 0%, #E65100 100%);
         color: white;
         border: none;
         font-weight: 600;
@@ -274,10 +298,11 @@ st.markdown("""
         transition: all 0.3s ease;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        font-family: 'Montserrat', sans-serif;
     }
     
     .stButton > button:hover {
-        box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4);
+        box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
         transform: translateY(-2px);
     }
     
@@ -287,14 +312,14 @@ st.markdown("""
     .stTextArea > div > div > textarea {
         border: 2px solid #E0E0E0 !important;
         border-radius: 6px;
-        font-family: 'Roboto', sans-serif;
+        font-family: 'Montserrat', sans-serif;
     }
     
     .stTextInput > div > div > input:focus,
     .stSelectbox > div > div > select:focus,
     .stTextArea > div > div > textarea:focus {
-        border-color: #D32F2F !important;
-        box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1) !important;
+        border-color: #FF6600 !important;
+        box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1) !important;
     }
     
     /* Divider */
@@ -307,7 +332,7 @@ st.markdown("""
     
     /* DataFrame styling */
     .dataframe {
-        font-family: 'Roboto', sans-serif;
+        font-family: 'Montserrat', sans-serif;
     }
     
     /* Info/Success/Error boxes */
@@ -321,8 +346,11 @@ st.markdown("""
 # Título principal
 st.markdown("""
 <div class="header-section">
-    <h1>SISTEMA DE AVALIAÇÃO E PDI</h1>
-    <p>Gestão de Performance e Desenvolvimento Individual | SATTE ALAM MOTORS</p>
+    <div class="header-logo">SA</div>
+    <div class="header-content">
+        <h1>SISTEMA DE AVALIAÇÃO E PDI</h1>
+        <p>Gestão de Performance e Desenvolvimento Individual | SATTE ALAM MOTORS</p>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -558,18 +586,18 @@ elif modo == "Visualizar Colaboradores":
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown('<h4 style="color: #00796B;">Pontos Fortes</h4>', unsafe_allow_html=True)
+            st.markdown('<h4 style="color: #000000; font-weight: 700;">Pontos Fortes</h4>', unsafe_allow_html=True)
             for i, ponto in enumerate(dados_colaborador["pontos_fortes"], 1):
                 if ponto:
                     st.write(f"• {ponto}")
         
         with col2:
-            st.markdown('<h4 style="color: #C62828;">Gargalos</h4>', unsafe_allow_html=True)
+            st.markdown('<h4 style="color: #FF6600; font-weight: 700;">Gargalos</h4>', unsafe_allow_html=True)
             for i, gargalo in enumerate(dados_colaborador["gargalos"], 1):
                 if gargalo:
                     st.write(f"• {gargalo}")
         
-        st.markdown('<h4 style="color: #1976D2;">Ações de Melhoria</h4>', unsafe_allow_html=True)
+        st.markdown('<h4 style="color: #4c4c4c; font-weight: 700;">Ações de Melhoria</h4>', unsafe_allow_html=True)
         for i, acao in enumerate(dados_colaborador["acoes_melhoria"], 1):
             with st.expander(f"Ação {i}: {acao['acao'][:50]}..."):
                 st.write(f"**Ação:** {acao['acao']}")
@@ -585,7 +613,7 @@ elif modo == "Relatório":
         nomes = []
         totais = []
         classificacoes = []
-        cores_map = {"ALTO DESEMPENHO": "#00796B", "MANUTENÇÃO": "#E65100", "RISCO": "#C62828"}
+        cores_map = {"ALTO DESEMPENHO": "#4CAF50", "MANUTENÇÃO": "#FF6600", "RISCO": "#D32F2F"}
         cores = []
         
         for id_col, dados_col in dados.items():
@@ -593,7 +621,7 @@ elif modo == "Relatório":
             totais.append(dados_col["total_pontos"])
             classificacao = dados_col["classificacao"]
             classificacoes.append(classificacao)
-            cores.append(cores_map.get(classificacao, "#1976D2"))
+            cores.append(cores_map.get(classificacao, "#FF6600"))
         
         col1, col2, col3 = st.columns(3)
         
@@ -611,13 +639,13 @@ elif modo == "Relatório":
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown('<h4 style="color: #D32F2F;">DISTRIBUIÇÃO DE PONTUAÇÕES</h4>', unsafe_allow_html=True)
+            st.markdown('<h4 style="color: #000000; font-weight: 700;">DISTRIBUIÇÃO DE PONTUAÇÕES</h4>', unsafe_allow_html=True)
             
             fig1 = px.bar(
                 x=nomes,
                 y=totais,
                 color=totais,
-                color_continuous_scale=["#C62828", "#E65100", "#00796B"],
+                color_continuous_scale=["#D32F2F", "#FF6600", "#4CAF50"],
                 labels={"y": "Pontos", "x": "Colaborador"},
                 height=400
             )
@@ -681,7 +709,7 @@ elif modo == "Relatório":
             x=list(criterios_medias.keys()),
             y=list(criterios_medias.values()),
             labels={"x": "Critério", "y": "Média de Notas"},
-            color_discrete_sequence=["#D32F2F"],
+            color_discrete_sequence=["#FF6600"],
             height=400
         )
         st.plotly_chart(fig3, use_container_width=True)
@@ -689,9 +717,9 @@ elif modo == "Relatório":
 # Footer
 st.divider()
 st.markdown("""
-<div style="text-align: center; color: #757575; margin-top: 30px; font-family: 'Roboto', sans-serif;">
-    <p style="margin: 5px 0;"><strong>SATTE ALAM MOTORS</strong></p>
-    <p style="margin: 5px 0; font-size: 0.9rem;">Todos os dados são salvos automaticamente no Google Sheets</p>
-    <p style="margin: 5px 0; font-size: 0.85rem;">Sistema de Avaliação e PDI v2.0 | Desenvolvido com Streamlit</p>
+<div style="text-align: center; color: #4c4c4c; margin-top: 30px; font-family: 'Montserrat', sans-serif;">
+    <p style="margin: 5px 0; font-weight: 700; font-size: 1.1rem;">SATTE ALAM MOTORS</p>
+    <p style="margin: 5px 0; font-size: 0.9rem; color: #000000;">Todos os dados são salvos automaticamente no Google Sheets</p>
+    <p style="margin: 5px 0; font-size: 0.85rem; color: #4c4c4c;">Sistema de Avaliação e PDI v2.0 | Desenvolvido com Streamlit</p>
 </div>
 """, unsafe_allow_html=True)
