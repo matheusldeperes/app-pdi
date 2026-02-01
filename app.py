@@ -303,16 +303,7 @@ st.markdown("""
         margin: 30px 0;
     }
     
-    /* Sidebar */
-    .stSidebar {
-        background-color: #FAFAFA;
-    }
-    
-    .stSidebar .stRadio > div {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
+    /* Sidebar - removido para manter tema padrão do Streamlit */
     
     /* DataFrame styling */
     .dataframe {
