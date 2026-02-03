@@ -382,7 +382,7 @@ _css_base = """
     
     /* Section headers */
     .section-header {
-        color: var(--text-primary);
+        color: var(--text-primary) !important;
         border-bottom: 3px solid #FF6600;
         padding-bottom: 12px;
         margin-bottom: 20px;
@@ -391,6 +391,25 @@ _css_base = """
         font-size: 1.3rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+    }
+
+    /* Títulos sub-seção - respeitam tema */
+    .subtitle-green,
+    .subtitle-red,
+    .subtitle-blue,
+    .subtitle-dark {
+        color: var(--text-primary) !important;
+        font-weight: 700 !important;
+    }
+
+    .subtitle-blue {
+        margin-top: 20px !important;
+    }
+
+    .subtitle-green,
+    .subtitle-red,
+    .subtitle-dark {
+        margin-top: 0 !important;
     }
 
     /* Texto global para modo dark/light */
@@ -687,16 +706,16 @@ if modo == "Nova Avaliação":
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown('<h4 style="color: #00796B; margin-top: 0;">O que CONTINUAR fazendo (Pontos Fortes)</h4>', unsafe_allow_html=True)
+        st.markdown('<h4 class="subtitle-green">O que CONTINUAR fazendo (Pontos Fortes)</h4>', unsafe_allow_html=True)
         ponto_forte_1 = st.text_area("Ponto Forte 1", key="pf1", height=80)
         ponto_forte_2 = st.text_area("Ponto Forte 2", key="pf2", height=80)
     
     with col2:
-        st.markdown('<h4 style="color: #C62828; margin-top: 0;">O que PARAR de fazer (Gargalos)</h4>', unsafe_allow_html=True)
+        st.markdown('<h4 class="subtitle-red">O que PARAR de fazer (Gargalos)</h4>', unsafe_allow_html=True)
         gargalo_1 = st.text_area("Gargalo 1", key="g1", height=80)
         gargalo_2 = st.text_area("Gargalo 2", key="g2", height=80)
     
-    st.markdown('<h4 style="color: #1976D2; margin-top: 20px;">O que COMEÇAR a desenvolver (Ações de Melhoria)</h4>', unsafe_allow_html=True)
+    st.markdown('<h4 class="subtitle-blue">O que COMEÇAR a desenvolver (Ações de Melhoria)</h4>', unsafe_allow_html=True)
     
     num_acoes = st.number_input("Quantas ações de melhoria?", min_value=1, max_value=5, value=3)
     
@@ -836,18 +855,18 @@ elif modo == "Visualizar Colaboradores":
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown('<h4 style="color: #000000; font-weight: 700;">Pontos Fortes</h4>', unsafe_allow_html=True)
+            st.markdown('<h4 class="subtitle-dark">Pontos Fortes</h4>', unsafe_allow_html=True)
             for i, ponto in enumerate(dados_colaborador["pontos_fortes"], 1):
                 if ponto:
                     st.write(f"• {ponto}")
         
         with col2:
-            st.markdown('<h4 style="color: #FF6600; font-weight: 700;">Gargalos</h4>', unsafe_allow_html=True)
+            st.markdown('<h4 class="subtitle-dark">Gargalos</h4>', unsafe_allow_html=True)
             for i, gargalo in enumerate(dados_colaborador["gargalos"], 1):
                 if gargalo:
                     st.write(f"• {gargalo}")
         
-        st.markdown('<h4 style="color: #4c4c4c; font-weight: 700;">Ações de Melhoria</h4>', unsafe_allow_html=True)
+        st.markdown('<h4 class="subtitle-dark">Ações de Melhoria</h4>', unsafe_allow_html=True)
         for i, acao in enumerate(dados_colaborador["acoes_melhoria"], 1):
             with st.expander(f"Ação {i}: {acao['acao'][:50]}..."):
                 st.write(f"**Ação:** {acao['acao']}")
