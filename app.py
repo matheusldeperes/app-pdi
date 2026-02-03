@@ -412,39 +412,18 @@ _css_base = """
         margin-top: 0 !important;
     }
 
-    /* Texto global para modo dark/light */
-    html,
-    body,
-    .stApp,
-    .stApp p,
-    .stApp li,
-    .stApp span,
-    .stApp label,
-    .stApp div,
-    [data-testid="stMarkdownContainer"] h1,
-    [data-testid="stMarkdownContainer"] h2,
-    [data-testid="stMarkdownContainer"] h3,
-    [data-testid="stMarkdownContainer"] h4,
-    [data-testid="stMarkdownContainer"] h5,
-    [data-testid="stMarkdownContainer"] h6,
-    [data-testid="stMarkdownContainer"] p,
-    [data-testid="stMarkdownContainer"] li,
-    [data-testid="stWidgetLabel"],
-    .stSelectbox label,
-    .stTextInput label,
-    .stTextArea label {
-        color: var(--text-primary) !important;
+    /* Forçar cor de texto GLOBALMENTE */
+    * {
+        color: $text_primary !important;
     }
-
-    /* Selectbox e inputs (BaseWeb) */
-    div[data-baseweb="select"] span,
-    div[data-baseweb="select"] div,
-    div[data-baseweb="input"] input,
-    div[data-baseweb="textarea"] textarea,
-    input,
-    textarea,
-    select {
-        color: var(--text-primary) !important;
+    
+    /* Exceções para manter cores de accent */
+    .stButton button,
+    .status-high,
+    .status-medium,
+    .status-low,
+    a {
+        color: white !important;
     }
 
     /* Labels e valores de métricas */
