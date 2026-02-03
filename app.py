@@ -307,10 +307,10 @@ _css_base = """
 <style>
     /* Cores corporativas SATTE ALAM */
     :root {
-        --primary-color: #000000;        /* Preto - Principal */
-        --secondary-color: #FFFFFF;      /* Branco - Complementar */
-        --accent-color: #FF6600;         /* Laranja - Pós Vendas */
-        --support-color: #4c4c4c;        /* Cinza - De apoio */
+        --primary-color: #000000;
+        --secondary-color: #FFFFFF;
+        --accent-color: #FF6600;
+        --support-color: #4c4c4c;
         --text-primary: $text_primary;
         --text-secondary: $text_secondary;
         --bg-light: #FAFAFA;
@@ -318,6 +318,12 @@ _css_base = """
         --header-bg: $header_bg;
         --header-text: $header_text;
         --header-subtext: $header_subtext;
+    }
+    
+    /* Forçar cor de texto no modo dark */
+    [data-testid="stAppViewContainer"],
+    [data-testid="stAppViewContainer"] *:not(.stButton):not(.status-high):not(.status-medium):not(.status-low) {
+        color: $text_primary !important;
     }
     
     /* Fonte personalizada - Montserrat */
@@ -417,13 +423,21 @@ _css_base = """
         color: $text_primary !important;
     }
     
-    /* Exceções para manter cores de accent */
-    .stButton button,
-    .status-high,
-    .status-medium,
-    .status-low,
-    a {
+    /* Exceções para manter cores específicas */
+    .stButton button {
         color: white !important;
+    }
+    
+    .status-high {
+        color: #1B5E20 !important;
+    }
+    
+    .status-medium {
+        color: #E65100 !important;
+    }
+    
+    .status-low {
+        color: #C62828 !important;
     }
 
     /* Labels e valores de métricas */
