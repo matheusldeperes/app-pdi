@@ -393,7 +393,13 @@ _css_base = """
         letter-spacing: 0.5px;
     }
 
-    /* Títulos e textos gerais em modo dark/light */
+    /* Texto global para modo dark/light */
+    .stApp,
+    .stApp p,
+    .stApp li,
+    .stApp span,
+    .stApp label,
+    .stApp div,
     [data-testid="stMarkdownContainer"] h1,
     [data-testid="stMarkdownContainer"] h2,
     [data-testid="stMarkdownContainer"] h3,
@@ -402,10 +408,15 @@ _css_base = """
     [data-testid="stMarkdownContainer"] h6,
     [data-testid="stMarkdownContainer"] p,
     [data-testid="stMarkdownContainer"] li,
-    label,
     .stSelectbox label,
     .stTextInput label,
     .stTextArea label {
+        color: var(--text-primary) !important;
+    }
+
+    /* Labels e valores de métricas */
+    [data-testid="stMetricLabel"],
+    [data-testid="stMetricValue"] {
         color: var(--text-primary) !important;
     }
     
