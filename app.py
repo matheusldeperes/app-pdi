@@ -340,9 +340,14 @@ _css_base = """
         gap: 30px;
     }
     
-    /* Container do header com fundo preto */
+    /* Metric labels: respeitar tema light/dark */
     [data-testid="stMetricLabel"] {
-        background-color: #000000;
+        background-color: transparent;
+        color: var(--text-primary);
+    }
+
+    [data-testid="stMetricValue"] {
+        color: var(--text-primary);
     }
     
     /* Estilo para o container da logo */
