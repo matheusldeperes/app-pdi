@@ -16,6 +16,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Ajuste de cores para Light/Dark do Streamlit
+_theme_base = st.get_option("theme.base") or "light"
+_header_bg = "linear-gradient(135deg, #000000 0%, #1a1a1a 100%)" if _theme_base == "dark" else "linear-gradient(135deg, #FFFFFF 0%, #F5F5F5 100%)"
+_header_text = "#FFFFFF" if _theme_base == "dark" else "#000000"
+_header_subtext = "#FFFFFF" if _theme_base == "dark" else "#4c4c4c"
+
 # Configuração do Google Sheets
 SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
@@ -164,7 +170,7 @@ def classificar_performance(total_pontos):
         return "RISCO", "#C62828"
 
 # CSS customizado com identidade visual SATTE ALAM MOTORS
-st.markdown("""
+st.markdown(f"""
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
     /* Cores corporativas SATTE ALAM */
@@ -177,6 +183,9 @@ st.markdown("""
         --text-secondary: #4c4c4c;
         --bg-light: #FAFAFA;
         --border-color: #E0E0E0;
+        --header-bg: {_header_bg};
+        --header-text: {_header_text};
+        --header-subtext: {_header_subtext};
     }
     
     /* Fonte personalizada - Montserrat */
@@ -190,10 +199,10 @@ st.markdown("""
     
     /* Header section */
     .header-section {
-        background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+        background: var(--header-bg);
         padding: 40px;
         border-radius: 12px;
-        color: white;
+        color: var(--header-text);
         margin-bottom: 30px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         display: flex;
@@ -208,7 +217,7 @@ st.markdown("""
     
     /* Estilo para o container da logo */
     .logo-container {
-        background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+        background: var(--header-bg);
         padding: 20px;
         border-radius: 12px;
         display: flex;
@@ -217,7 +226,7 @@ st.markdown("""
     }
     
     .header-container {
-        background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+        background: var(--header-bg);
         padding: 20px 30px;
         border-radius: 12px;
         margin-bottom: 20px;
@@ -337,7 +346,7 @@ st.markdown("""
 st.markdown("""
 <style>
 .header-wrapper {
-    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+    background: var(--header-bg);
     padding: 20px 30px;
     border-radius: 12px;
     margin-bottom: 20px;
@@ -347,14 +356,14 @@ st.markdown("""
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 .header-text h1 {
-    color: #FFFFFF;
+    color: var(--header-text);
     margin: 0;
     font-weight: 700;
     font-size: 2rem;
     letter-spacing: 0.5px;
 }
 .header-text p {
-    color: #FFFFFF;
+    color: var(--header-subtext);
     margin: 8px 0 0 0;
     font-size: 0.95rem;
     opacity: 0.95;
