@@ -163,9 +163,9 @@ def calcular_total(scores):
 
 # Função para classificar performance
 def classificar_performance(total_pontos):
-    if total_pontos >= 31:
+    if total_pontos >= 40:
         return "ALTO DESEMPENHO", "#00796B"
-    elif total_pontos >= 16:
+    elif total_pontos >= 21:
         return "MANUTENÇÃO", "#E65100"
     else:
         return "RISCO", "#C62828"
@@ -442,6 +442,8 @@ if modo == "Nova Avaliação":
         "Organização": "Manutenção do box e zelo com ferramentas",
         "Trabalho em Equipe": "Colaboração e clima organizacional",
         "Comunicação e Regras": "Postura e adesão às normas internas",
+        "Segurança e EPIs": "Cumprimento de regras de segurança e uso correto de EPIs",
+        "Conduta e Respeito": "Boas práticas de conduta e prevenção ao assédio moral",
         "Eficiência Técnica": "Entrega dentro do tempo padrão (produtividade)",
         "Qualidade (Retorno)": "Execução correta na 1ª vez (sem retrabalho)",
         "Adesão aos Processos": "Uso de checklists e registros no sistema",
@@ -478,7 +480,7 @@ if modo == "Nova Avaliação":
     st.divider()
     col1, col2 = st.columns([2, 1])
     with col1:
-        st.markdown(f'<h3 class="section-header">Total de Pontos: {total_pontos}/35</h3>', unsafe_allow_html=True)
+        st.markdown(f'<h3 class="section-header">Total de Pontos: {total_pontos}/45</h3>', unsafe_allow_html=True)
     with col2:
         if "ALTO" in classificacao:
             st.markdown(f'<div class="status-high">{classificacao}</div>', unsafe_allow_html=True)
@@ -677,7 +679,7 @@ elif modo == "Relatório":
         with col1:
             st.metric("Total de Colaboradores", len(dados))
         with col2:
-            st.metric("Média de Pontos", f"{sum(totais) / len(totais):.1f}/35")
+            st.metric("Média de Pontos", f"{sum(totais) / len(totais):.1f}/45")
         with col3:
             alto_desempenho = sum(1 for c in classificacoes if "ALTO" in c)
             st.metric("Alto Desempenho", alto_desempenho, delta="Excelente")
@@ -714,9 +716,9 @@ elif modo == "Relatório":
             )
             
             # Adicionar linhas de referência
-            fig2.add_vline(x=15, line_dash="dash", line_color="#C62828", annotation_text="Risco")
-            fig2.add_vline(x=30, line_dash="dash", line_color="#E65100", annotation_text="Limite Manutenção")
-            fig2.add_vline(x=31, line_dash="dash", line_color="#00796B", annotation_text="Alto Desempenho")
+            fig2.add_vline(x=20, line_dash="dash", line_color="#C62828", annotation_text="Risco")
+            fig2.add_vline(x=21, line_dash="dash", line_color="#E65100", annotation_text="Limite Manutenção")
+            fig2.add_vline(x=40, line_dash="dash", line_color="#00796B", annotation_text="Alto Desempenho")
             
             st.plotly_chart(fig2, use_container_width=True)
         
@@ -744,9 +746,10 @@ elif modo == "Relatório":
         st.markdown('<h3 class="section-header">ANÁLISE POR CRITÉRIO</h3>', unsafe_allow_html=True)
         
         criterios_medias = {}
-        for criterio in ["Organização", "Trabalho em Equipe", "Comunicação e Regras", 
-                        "Eficiência Técnica", "Qualidade (Retorno)", "Adesão aos Processos", 
-                        "Capacitação"]:
+        for criterio in ["Organização", "Trabalho em Equipe", "Comunicação e Regras",
+                "Segurança e EPIs", "Conduta e Respeito",
+                "Eficiência Técnica", "Qualidade (Retorno)", "Adesão aos Processos",
+                "Capacitação"]:
             notas = []
             for id_col, dados_col in dados.items():
                 if criterio in dados_col["scores"]:
