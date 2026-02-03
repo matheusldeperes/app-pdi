@@ -77,16 +77,47 @@ def obter_planilha():
         st.success(f"Nova planilha criada: {sheet_name}")
     
     # Obtém ou cria a primeira aba
+    headers = [
+        "ID", "Nome", "Avaliador", "Data", "Scores_JSON", "Observacoes_JSON",
+        "Opiniao", "Total_Pontos", "Classificacao", "Pontos_Fortes_JSON",
+        "Gargalos_JSON", "Acoes_Melhoria_JSON", "Timestamp"
+    ]
+
     try:
         worksheet = spreadsheet.worksheet("Avaliações")
+        current_headers = worksheet.row_values(1)
+        if "Opiniao" not in current_headers:
+            worksheet.update('A1:M1', [headers])
     except:
         worksheet = spreadsheet.add_worksheet(title="Avaliações", rows=1000, cols=20)
         # Adiciona cabeçalhos
-        headers = ["ID", "Nome", "Avaliador", "Data", "Scores_JSON", "Observacoes_JSON", 
-                   "Total_Pontos", "Classificacao", "Pontos_Fortes_JSON", "Gargalos_JSON", 
-                   "Acoes_Melhoria_JSON", "Timestamp"]
-        worksheet.update('A1:L1', [headers])
+        worksheet.update('A1:M1', [headers])
     
+    return worksheet
+
+# Função para obter ou criar planilha de feedbacks
+@st.cache_resource
+def obter_planilha_feedbacks():
+    """Obtém ou cria a planilha de feedbacks"""
+    client = conectar_google_sheets()
+    sheet_name = st.secrets.get("sheet_name", "Avaliações PDI - SATTE ALAM")
+
+    try:
+        spreadsheet = client.open(sheet_name)
+    except gspread.exceptions.SpreadsheetNotFound:
+        spreadsheet = client.create(sheet_name)
+
+    headers = ["ID", "Nome", "DataHora", "Motivo", "Feedback", "Timestamp"]
+
+    try:
+        worksheet = spreadsheet.worksheet("Feedbacks")
+        current_headers = worksheet.row_values(1)
+        if current_headers != headers:
+            worksheet.update('A1:F1', [headers])
+    except:
+        worksheet = spreadsheet.add_worksheet(title="Feedbacks", rows=1000, cols=10)
+        worksheet.update('A1:F1', [headers])
+
     return worksheet
 
 # Função para carregar dados do Google Sheets
@@ -107,6 +138,7 @@ def carregar_dados():
                     'data': record.get('Data', ''),
                     'scores': json.loads(record.get('Scores_JSON', '{}')),
                     'observacoes': json.loads(record.get('Observacoes_JSON', '{}')),
+                    'opiniao': record.get('Opiniao', ''),
                     'total_pontos': record.get('Total_Pontos', 0),
                     'classificacao': record.get('Classificacao', ''),
                     'pontos_fortes': json.loads(record.get('Pontos_Fortes_JSON', '[]')),
@@ -139,6 +171,7 @@ def salvar_dados(dados):
                 info.get('data', ''),
                 json.dumps(info.get('scores', {}), ensure_ascii=False),
                 json.dumps(info.get('observacoes', {}), ensure_ascii=False),
+                info.get('opiniao', ''),
                 info.get('total_pontos', 0),
                 info.get('classificacao', ''),
                 json.dumps(info.get('pontos_fortes', []), ensure_ascii=False),
@@ -150,11 +183,53 @@ def salvar_dados(dados):
         
         # Insere todos os dados de uma vez
         if rows:
-            worksheet.update(f'A2:L{len(rows)+1}', rows)
+            worksheet.update(f'A2:M{len(rows)+1}', rows)
         
         return True
     except Exception as e:
         st.error(f"Erro ao salvar dados: {str(e)}")
+        return False
+
+# Funções de feedbacks
+def carregar_feedbacks():
+    """Carrega feedbacks do Google Sheets"""
+    try:
+        worksheet = obter_planilha_feedbacks()
+        records = worksheet.get_all_records()
+        feedbacks = []
+        for record in records:
+            if record.get('ID'):
+                feedbacks.append({
+                    'id': record.get('ID', ''),
+                    'nome': record.get('Nome', ''),
+                    'datahora': record.get('DataHora', ''),
+                    'motivo': record.get('Motivo', ''),
+                    'feedback': record.get('Feedback', ''),
+                    'timestamp': record.get('Timestamp', '')
+                })
+        return feedbacks
+    except Exception as e:
+        st.error(f"Erro ao carregar feedbacks: {str(e)}")
+        return []
+
+def salvar_feedback(nome, motivo, feedback_texto):
+    """Salva feedback individual no Google Sheets"""
+    try:
+        worksheet = obter_planilha_feedbacks()
+        datahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        feedback_id = f"{nome}_{datahora}"
+        row = [
+            feedback_id,
+            nome,
+            datahora,
+            motivo,
+            feedback_texto,
+            datetime.now().isoformat()
+        ]
+        worksheet.append_row(row)
+        return True
+    except Exception as e:
+        st.error(f"Erro ao salvar feedback: {str(e)}")
         return False
 
 # Função para calcular pontuação total
@@ -407,7 +482,7 @@ except FileNotFoundError:
 st.sidebar.title("GERENCIAMENTO")
 modo = st.sidebar.radio(
     "Selecione a ação:",
-    ["Nova Avaliação", "Visualizar Colaboradores", "Relatório"]
+    ["Nova Avaliação", "Visualizar Colaboradores", "Relatório", "Feedbacks"]
 )
 
 dados = carregar_dados()
@@ -490,6 +565,15 @@ if modo == "Nova Avaliação":
             st.markdown(f'<div class="status-low">{classificacao}</div>', unsafe_allow_html=True)
     
     st.divider()
+    st.markdown('<h3 class="section-header">OPINIÃO DO COLABORADOR</h3>', unsafe_allow_html=True)
+    opiniao_colaborador = st.text_area(
+        "Opinião sobre riscos ocupacionais e problemas no processo",
+        key="opiniao_colaborador",
+        height=120,
+        placeholder="Relate riscos observados, gargalos do processo e sugestões de melhoria"
+    )
+
+    st.divider()
     st.markdown('<h3 class="section-header">PLANO DE DESENVOLVIMENTO INDIVIDUAL (PDI)</h3>', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
@@ -529,6 +613,7 @@ if modo == "Nova Avaliação":
                 "data": str(data_avaliacao),
                 "scores": scores,
                 "observacoes": observacoes,
+                "opiniao": opiniao_colaborador,
                 "total_pontos": total_pontos,
                 "classificacao": classificacao,
                 "pontos_fortes": [ponto_forte_1, ponto_forte_2],
@@ -654,6 +739,14 @@ elif modo == "Visualizar Colaboradores":
                 st.write(f"**Ação:** {acao['acao']}")
                 st.write(f"**Como e Prazos:** {acao['prazo']}")
 
+        # Opinião do colaborador
+        st.markdown('<h3 class="section-header">OPINIÃO DO COLABORADOR</h3>', unsafe_allow_html=True)
+        opiniao = dados_colaborador.get("opiniao", "")
+        if opiniao:
+            st.write(opiniao)
+        else:
+            st.info("Sem opinião registrada.")
+
 elif modo == "Relatório":
     st.markdown('<h2 class="section-header">RELATÓRIO GERAL DE PERFORMANCE</h2>', unsafe_allow_html=True)
     
@@ -765,6 +858,70 @@ elif modo == "Relatório":
             height=400
         )
         st.plotly_chart(fig3, use_container_width=True)
+
+elif modo == "Feedbacks":
+    st.markdown('<h2 class="section-header">FEEDBACKS SOB DEMANDA</h2>', unsafe_allow_html=True)
+
+    if not dados:
+        st.info("Nenhum colaborador registrado ainda.")
+    else:
+        feedbacks = carregar_feedbacks()
+
+        colaboradores = sorted({d["nome"] for d in dados.values()})
+        col1, col2 = st.columns(2)
+
+        with col1:
+            colaborador_feedback = st.selectbox(
+                "Selecione o colaborador",
+                colaboradores
+            )
+        with col2:
+            motivo_feedback = st.text_input(
+                "Motivo do feedback",
+                placeholder="Ex.: Segurança, processo, conduta, desempenho"
+            )
+
+        feedback_texto = st.text_area(
+            "Feedback (direcionamento)",
+            height=120,
+            placeholder="Descreva o direcionamento e expectativas"
+        )
+
+        if st.button("SALVAR FEEDBACK", use_container_width=True):
+            if colaborador_feedback and motivo_feedback.strip() and feedback_texto.strip():
+                if salvar_feedback(colaborador_feedback, motivo_feedback, feedback_texto):
+                    st.success("Feedback salvo com sucesso!")
+                    st.rerun()
+            else:
+                st.error("Preencha colaborador, motivo e feedback.")
+
+        st.divider()
+        st.markdown('<h3 class="section-header">HISTÓRICO DE FEEDBACKS</h3>', unsafe_allow_html=True)
+
+        filtro_nome = st.selectbox(
+            "Filtrar por colaborador",
+            ["Todos"] + colaboradores
+        )
+
+        feedbacks_filtrados = [
+            f for f in feedbacks
+            if filtro_nome == "Todos" or f["nome"] == filtro_nome
+        ]
+
+        if not feedbacks_filtrados:
+            st.info("Nenhum feedback registrado para o filtro selecionado.")
+        else:
+            df_feedbacks = pd.DataFrame([
+                {
+                    "Nome": f["nome"],
+                    "Data/Hora": f["datahora"],
+                    "Motivo": f["motivo"],
+                    "Feedback": f["feedback"]
+                }
+                for f in feedbacks_filtrados
+            ]).sort_values("Data/Hora", ascending=False)
+
+            st.dataframe(df_feedbacks, use_container_width=True, hide_index=True)
 
 # Footer
 st.divider()
