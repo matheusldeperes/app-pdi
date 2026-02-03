@@ -159,7 +159,8 @@ def salvar_dados(dados):
         worksheet = obter_planilha()
         
         # Limpa todos os dados (exceto cabeçalho)
-        worksheet.delete_rows(2, worksheet.row_count)
+        if worksheet.row_count > 1:
+            worksheet.delete_rows(2, worksheet.row_count)
         
         # Prepara dados para inserção
         rows = []
@@ -658,17 +659,23 @@ elif modo == "Visualizar Colaboradores":
         id_selecionado = next(d["ID"] for d in dados_lista if d["Nome"] == colaborador_selecionado)
         dados_colaborador = dados[id_selecionado]
         
-        col1, col2 = st.columns([3, 1])
+        col1, col2, col3 = st.columns([3, 1, 1])
         
         with col1:
             st.markdown(f'<h3 class="section-header">AVALIAÇÃO DE {colaborador_selecionado.upper()}</h3>', unsafe_allow_html=True)
         
         with col2:
-            if st.button("DELETAR COLABORADOR", key="btn_delete"):
+            modo_editar = st.button("✏️ EDITAR", key="btn_edit", use_container_width=True)
+        
+        with col3:
+            if st.button("🗑️ DELETAR", key="btn_delete", use_container_width=True):
                 del dados[id_selecionado]
                 salvar_dados(dados)
                 st.success(f"{colaborador_selecionado} foi deletado!")
                 st.rerun()
+        
+        if modo_editar:
+            st.session_state.editando = id_selecionado
         
         # Informações básicas
         col1, col2, col3 = st.columns(3)
@@ -746,6 +753,146 @@ elif modo == "Visualizar Colaboradores":
             st.write(opiniao)
         else:
             st.info("Sem opinião registrada.")
+
+        # Modo de edição
+        if 'editando' in st.session_state and st.session_state.editando == id_selecionado:
+            st.divider()
+            st.markdown('<h2 class="section-header">MODO DE EDIÇÃO</h2>', unsafe_allow_html=True)
+            
+            st.info("Edite os campos abaixo e clique em 'SALVAR ALTERAÇÕES' para atualizar a avaliação.")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                avaliador_edit = st.text_input(
+                    "Avaliador",
+                    value=dados_colaborador.get("avaliador", ""),
+                    key="edit_avaliador"
+                )
+            with col2:
+                data_edit = st.date_input(
+                    "Data",
+                    value=datetime.strptime(dados_colaborador.get("data", "2000-01-01"), "%Y-%m-%d"),
+                    key="edit_data"
+                )
+            
+            st.markdown('<h3 class="section-header">EDITAR MATRIZ DE COMPETÊNCIAS</h3>', unsafe_allow_html=True)
+            st.caption("Escala: 1=Insatisfatório, 2=Abaixo da Expectativa, 3=Atende, 4=Supera, 5=Excepcional")
+            
+            scores_edit = {}
+            observacoes_edit = {}
+            
+            for idx, criterio in enumerate(dados_colaborador["scores"].keys()):
+                col1, col2, col3 = st.columns([2, 1, 2])
+                
+                with col1:
+                    st.caption(f"**{criterio}**")
+                
+                with col2:
+                    scores_edit[criterio] = st.selectbox(
+                        label="Nota",
+                        options=[1, 2, 3, 4, 5],
+                        index=int(dados_colaborador["scores"][criterio]) - 1,
+                        key=f"edit_score_{idx}"
+                    )
+                
+                with col3:
+                    observacoes_edit[criterio] = st.text_input(
+                        "Observações",
+                        value=dados_colaborador["observacoes"].get(criterio, ""),
+                        key=f"edit_obs_{idx}"
+                    )
+            
+            total_pontos_edit = calcular_total(scores_edit)
+            classificacao_edit, _ = classificar_performance(total_pontos_edit)
+            
+            st.divider()
+            st.markdown(f'<h3 class="section-header">Total de Pontos: {total_pontos_edit}/45</h3>', unsafe_allow_html=True)
+            
+            st.divider()
+            st.markdown('<h3 class="section-header">EDITAR PDI</h3>', unsafe_allow_html=True)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown('<h4 style="color: #00796B; margin-top: 0;">Pontos Fortes</h4>', unsafe_allow_html=True)
+                pf1_edit = st.text_area("Ponto Forte 1", 
+                    value=dados_colaborador["pontos_fortes"][0] if len(dados_colaborador["pontos_fortes"]) > 0 else "",
+                    key="edit_pf1", height=80)
+                pf2_edit = st.text_area("Ponto Forte 2",
+                    value=dados_colaborador["pontos_fortes"][1] if len(dados_colaborador["pontos_fortes"]) > 1 else "",
+                    key="edit_pf2", height=80)
+            
+            with col2:
+                st.markdown('<h4 style="color: #C62828; margin-top: 0;">Gargalos</h4>', unsafe_allow_html=True)
+                g1_edit = st.text_area("Gargalo 1",
+                    value=dados_colaborador["gargalos"][0] if len(dados_colaborador["gargalos"]) > 0 else "",
+                    key="edit_g1", height=80)
+                g2_edit = st.text_area("Gargalo 2",
+                    value=dados_colaborador["gargalos"][1] if len(dados_colaborador["gargalos"]) > 1 else "",
+                    key="edit_g2", height=80)
+            
+            st.markdown('<h4 style="color: #1976D2; margin-top: 20px;">Ações de Melhoria</h4>', unsafe_allow_html=True)
+            
+            num_acoes_edit = st.number_input("Quantas ações de melhoria?", 
+                min_value=1, max_value=5, 
+                value=len(dados_colaborador["acoes_melhoria"]) or 3,
+                key="edit_num_acoes")
+            
+            acoes_melhoria_edit = []
+            for i in range(num_acoes_edit):
+                col1, col2 = st.columns(2)
+                with col1:
+                    acao_valor = ""
+                    if i < len(dados_colaborador["acoes_melhoria"]):
+                        acao_valor = dados_colaborador["acoes_melhoria"][i].get("acao", "")
+                    acao = st.text_area(f"Ação de Melhoria {i+1}", value=acao_valor, key=f"edit_acao_{i}", height=80)
+                with col2:
+                    prazo_valor = ""
+                    if i < len(dados_colaborador["acoes_melhoria"]):
+                        prazo_valor = dados_colaborador["acoes_melhoria"][i].get("prazo", "")
+                    prazo = st.text_input(f"Como e Prazos? {i+1}", value=prazo_valor, key=f"edit_prazo_{i}")
+                if acao:
+                    acoes_melhoria_edit.append({"acao": acao, "prazo": prazo})
+            
+            st.divider()
+            st.markdown('<h3 class="section-header">EDITAR OPINIÃO DO COLABORADOR</h3>', unsafe_allow_html=True)
+            opiniao_edit = st.text_area(
+                "Opinião sobre riscos ocupacionais e problemas no processo",
+                value=dados_colaborador.get("opiniao", ""),
+                key="edit_opiniao",
+                height=120,
+                placeholder="Relate riscos observados, gargalos do processo e sugestões de melhoria"
+            )
+            
+            st.divider()
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if st.button("SALVAR ALTERAÇÕES", use_container_width=True, key="btn_save_edit"):
+                    dados[id_selecionado] = {
+                        "nome": dados_colaborador["nome"],
+                        "avaliador": avaliador_edit,
+                        "data": str(data_edit),
+                        "scores": scores_edit,
+                        "observacoes": observacoes_edit,
+                        "opiniao": opiniao_edit,
+                        "total_pontos": total_pontos_edit,
+                        "classificacao": classificacao_edit,
+                        "pontos_fortes": [pf1_edit, pf2_edit],
+                        "gargalos": [g1_edit, g2_edit],
+                        "acoes_melhoria": acoes_melhoria_edit,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                    
+                    salvar_dados(dados)
+                    st.success("Avaliação atualizada com sucesso!")
+                    del st.session_state.editando
+                    st.rerun()
+            
+            with col2:
+                if st.button("CANCELAR", use_container_width=True, key="btn_cancel_edit"):
+                    del st.session_state.editando
+                    st.rerun()
 
 elif modo == "Relatório":
     st.markdown('<h2 class="section-header">RELATÓRIO GERAL DE PERFORMANCE</h2>', unsafe_allow_html=True)
