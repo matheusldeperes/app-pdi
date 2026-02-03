@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 import plotly.graph_objects as go
 import plotly.express as px
+from string import Template
 from pathlib import Path
 import gspread
 from google.oauth2.service_account import Credentials
@@ -169,12 +170,11 @@ def classificar_performance(total_pontos):
     else:
         return "RISCO", "#C62828"
 
-# CSS customizado com identidade visual SATTE ALAM MOTORS
-st.markdown(f"""
+_css_base = """
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
     /* Cores corporativas SATTE ALAM */
-    :root {{
+    :root {
         --primary-color: #000000;        /* Preto - Principal */
         --secondary-color: #FFFFFF;      /* Branco - Complementar */
         --accent-color: #FF6600;         /* Laranja - Pós Vendas */
@@ -183,10 +183,10 @@ st.markdown(f"""
         --text-secondary: #4c4c4c;
         --bg-light: #FAFAFA;
         --border-color: #E0E0E0;
-        --header-bg: {_header_bg};
-        --header-text: {_header_text};
-        --header-subtext: {_header_subtext};
-    }}
+        --header-bg: $header_bg;
+        --header-text: $header_text;
+        --header-subtext: $header_subtext;
+    }
     
     /* Fonte personalizada - Montserrat */
     * {
@@ -340,7 +340,17 @@ st.markdown(f"""
         margin: 10px 0;
     }
 </style>
-""", unsafe_allow_html=True)
+"""
+
+# CSS customizado com identidade visual SATTE ALAM MOTORS
+st.markdown(
+    Template(_css_base).substitute(
+        header_bg=_header_bg,
+        header_text=_header_text,
+        header_subtext=_header_subtext,
+    ),
+    unsafe_allow_html=True,
+)
 
 # Título principal
 st.markdown("""
