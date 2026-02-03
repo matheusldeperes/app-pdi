@@ -22,6 +22,8 @@ _theme_base = st.get_option("theme.base") or "light"
 _header_bg = "linear-gradient(135deg, #000000 0%, #1a1a1a 100%)" if _theme_base == "dark" else "linear-gradient(135deg, #FFFFFF 0%, #F5F5F5 100%)"
 _header_text = "#FFFFFF" if _theme_base == "dark" else "#000000"
 _header_subtext = "#FFFFFF" if _theme_base == "dark" else "#4c4c4c"
+_text_primary = "#FFFFFF" if _theme_base == "dark" else "#000000"
+_text_secondary = "#E0E0E0" if _theme_base == "dark" else "#4c4c4c"
 
 # Configuração do Google Sheets
 SCOPES = [
@@ -309,8 +311,8 @@ _css_base = """
         --secondary-color: #FFFFFF;      /* Branco - Complementar */
         --accent-color: #FF6600;         /* Laranja - Pós Vendas */
         --support-color: #4c4c4c;        /* Cinza - De apoio */
-        --text-primary: #000000;
-        --text-secondary: #4c4c4c;
+        --text-primary: $text_primary;
+        --text-secondary: $text_secondary;
         --bg-light: #FAFAFA;
         --border-color: #E0E0E0;
         --header-bg: $header_bg;
@@ -447,6 +449,8 @@ _css_base = """
         border: 2px solid #E0E0E0 !important;
         border-radius: 6px;
         font-family: 'Montserrat', sans-serif;
+        color: var(--text-primary) !important;
+        background-color: transparent !important;
     }
     
     .stTextInput > div > div > input:focus,
@@ -483,6 +487,8 @@ st.markdown(
         header_bg=_header_bg,
         header_text=_header_text,
         header_subtext=_header_subtext,
+        text_primary=_text_primary,
+        text_secondary=_text_secondary,
     ),
     unsafe_allow_html=True,
 )
