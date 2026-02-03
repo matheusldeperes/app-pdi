@@ -394,6 +394,8 @@ _css_base = """
     }
 
     /* Texto global para modo dark/light */
+    html,
+    body,
     .stApp,
     .stApp p,
     .stApp li,
@@ -408,9 +410,21 @@ _css_base = """
     [data-testid="stMarkdownContainer"] h6,
     [data-testid="stMarkdownContainer"] p,
     [data-testid="stMarkdownContainer"] li,
+    [data-testid="stWidgetLabel"],
     .stSelectbox label,
     .stTextInput label,
     .stTextArea label {
+        color: var(--text-primary) !important;
+    }
+
+    /* Selectbox e inputs (BaseWeb) */
+    div[data-baseweb="select"] span,
+    div[data-baseweb="select"] div,
+    div[data-baseweb="input"] input,
+    div[data-baseweb="textarea"] textarea,
+    input,
+    textarea,
+    select {
         color: var(--text-primary) !important;
     }
 
