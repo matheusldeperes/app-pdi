@@ -152,43 +152,97 @@ def carregar_dados():
         st.error(f"Erro ao carregar dados: {str(e)}")
         return {}
 
-# Função para salvar dados no Google Sheets
+# Função para salvar dados no Google Sheets (SEGURA - sem deletar)
 def salvar_dados(dados):
-    """Salva dados no Google Sheets"""
+    """Salva dados no Google Sheets de forma segura - APENAS ADICIONA NOVOS REGISTROS"""
     try:
         worksheet = obter_planilha()
+        records = worksheet.get_all_records()
         
-        # Limpa todos os dados (exceto cabeçalho)
-        if worksheet.row_count > 1:
-            worksheet.delete_rows(2, worksheet.row_count)
+        # IDs existentes na planilha
+        ids_existentes = set(r.get('ID', '') for r in records if r.get('ID'))
         
-        # Prepara dados para inserção
-        rows = []
+        # Encontra novos registros para adicionar
         for id_col, info in dados.items():
-            row = [
-                id_col,
-                info.get('nome', ''),
-                info.get('avaliador', ''),
-                info.get('data', ''),
-                json.dumps(info.get('scores', {}), ensure_ascii=False),
-                json.dumps(info.get('observacoes', {}), ensure_ascii=False),
-                info.get('opiniao', ''),
-                info.get('total_pontos', 0),
-                info.get('classificacao', ''),
-                json.dumps(info.get('pontos_fortes', []), ensure_ascii=False),
-                json.dumps(info.get('gargalos', []), ensure_ascii=False),
-                json.dumps(info.get('acoes_melhoria', []), ensure_ascii=False),
-                info.get('timestamp', '')
-            ]
-            rows.append(row)
-        
-        # Insere todos os dados de uma vez
-        if rows:
-            worksheet.update(f'A2:M{len(rows)+1}', rows)
+            if id_col not in ids_existentes:
+                # Novo registro - adiciona como nova linha
+                row = [
+                    id_col,
+                    info.get('nome', ''),
+                    info.get('avaliador', ''),
+                    info.get('data', ''),
+                    json.dumps(info.get('scores', {}), ensure_ascii=False),
+                    json.dumps(info.get('observacoes', {}), ensure_ascii=False),
+                    info.get('opiniao', ''),
+                    info.get('total_pontos', 0),
+                    info.get('classificacao', ''),
+                    json.dumps(info.get('pontos_fortes', []), ensure_ascii=False),
+                    json.dumps(info.get('gargalos', []), ensure_ascii=False),
+                    json.dumps(info.get('acoes_melhoria', []), ensure_ascii=False),
+                    info.get('timestamp', '')
+                ]
+                worksheet.append_row(row)
         
         return True
     except Exception as e:
         st.error(f"Erro ao salvar dados: {str(e)}")
+        st.warning("⚠️ **Aviso:** Houve um problema ao salvar. Verifique o Google Sheets manualmente e faça backup dos dados se necessário.")
+        return False
+
+# Função para atualizar um registro individual (mais seguro)
+def atualizar_avaliacao(id_colaborador, dados_atualizados):
+    """Atualiza uma avaliação individual sem deletar outras"""
+    try:
+        worksheet = obter_planilha()
+        records = worksheet.get_all_records()
+        
+        # Encontra a linha do colaborador
+        linha_encontrada = None
+        for idx, record in enumerate(records, start=2):  # Começa de 2 porque 1 é cabeçalho
+            if record.get('ID') == id_colaborador:
+                linha_encontrada = idx
+                break
+        
+        if linha_encontrada is None:
+            # Se não encontrou, adiciona como nova linha
+            row = [
+                id_colaborador,
+                dados_atualizados.get('nome', ''),
+                dados_atualizados.get('avaliador', ''),
+                dados_atualizados.get('data', ''),
+                json.dumps(dados_atualizados.get('scores', {}), ensure_ascii=False),
+                json.dumps(dados_atualizados.get('observacoes', {}), ensure_ascii=False),
+                dados_atualizados.get('opiniao', ''),
+                dados_atualizados.get('total_pontos', 0),
+                dados_atualizados.get('classificacao', ''),
+                json.dumps(dados_atualizados.get('pontos_fortes', []), ensure_ascii=False),
+                json.dumps(dados_atualizados.get('gargalos', []), ensure_ascii=False),
+                json.dumps(dados_atualizados.get('acoes_melhoria', []), ensure_ascii=False),
+                dados_atualizados.get('timestamp', '')
+            ]
+            worksheet.append_row(row)
+        else:
+            # Atualiza a linha encontrada
+            row = [
+                id_colaborador,
+                dados_atualizados.get('nome', ''),
+                dados_atualizados.get('avaliador', ''),
+                dados_atualizados.get('data', ''),
+                json.dumps(dados_atualizados.get('scores', {}), ensure_ascii=False),
+                json.dumps(dados_atualizados.get('observacoes', {}), ensure_ascii=False),
+                dados_atualizados.get('opiniao', ''),
+                dados_atualizados.get('total_pontos', 0),
+                dados_atualizados.get('classificacao', ''),
+                json.dumps(dados_atualizados.get('pontos_fortes', []), ensure_ascii=False),
+                json.dumps(dados_atualizados.get('gargalos', []), ensure_ascii=False),
+                json.dumps(dados_atualizados.get('acoes_melhoria', []), ensure_ascii=False),
+                dados_atualizados.get('timestamp', '')
+            ]
+            worksheet.update(f'A{linha_encontrada}:M{linha_encontrada}', [row])
+        
+        return True
+    except Exception as e:
+        st.error(f"Erro ao atualizar avaliação: {str(e)}")
         return False
 
 # Funções de feedbacks
@@ -869,7 +923,7 @@ elif modo == "Visualizar Colaboradores":
             
             with col1:
                 if st.button("SALVAR ALTERAÇÕES", use_container_width=True, key="btn_save_edit"):
-                    dados[id_selecionado] = {
+                    dados_atualizados = {
                         "nome": dados_colaborador["nome"],
                         "avaliador": avaliador_edit,
                         "data": str(data_edit),
@@ -884,10 +938,12 @@ elif modo == "Visualizar Colaboradores":
                         "timestamp": datetime.now().isoformat()
                     }
                     
-                    salvar_dados(dados)
-                    st.success("Avaliação atualizada com sucesso!")
-                    del st.session_state.editando
-                    st.rerun()
+                    if atualizar_avaliacao(id_selecionado, dados_atualizados):
+                        st.success("Avaliação atualizada com sucesso!")
+                        del st.session_state.editando
+                        st.rerun()
+                    else:
+                        st.error("Erro ao atualizar avaliação!")
             
             with col2:
                 if st.button("CANCELAR", use_container_width=True, key="btn_cancel_edit"):
