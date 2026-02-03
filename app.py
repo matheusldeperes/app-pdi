@@ -174,7 +174,7 @@ st.markdown(f"""
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
     /* Cores corporativas SATTE ALAM */
-    :root {
+    :root {{
         --primary-color: #000000;        /* Preto - Principal */
         --secondary-color: #FFFFFF;      /* Branco - Complementar */
         --accent-color: #FF6600;         /* Laranja - Pós Vendas */
@@ -186,7 +186,7 @@ st.markdown(f"""
         --header-bg: {_header_bg};
         --header-text: {_header_text};
         --header-subtext: {_header_subtext};
-    }
+    }}
     
     /* Fonte personalizada - Montserrat */
     * {
