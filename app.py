@@ -377,11 +377,12 @@ _css_base = """
         border-left: 4px solid #FF6600;
         margin: 10px 0;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        color: var(--text-primary);
     }
     
     /* Section headers */
     .section-header {
-        color: #000000;
+        color: var(--text-primary);
         border-bottom: 3px solid #FF6600;
         padding-bottom: 12px;
         margin-bottom: 20px;
@@ -390,6 +391,22 @@ _css_base = """
         font-size: 1.3rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+    }
+
+    /* Títulos e textos gerais em modo dark/light */
+    [data-testid="stMarkdownContainer"] h1,
+    [data-testid="stMarkdownContainer"] h2,
+    [data-testid="stMarkdownContainer"] h3,
+    [data-testid="stMarkdownContainer"] h4,
+    [data-testid="stMarkdownContainer"] h5,
+    [data-testid="stMarkdownContainer"] h6,
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] li,
+    label,
+    .stSelectbox label,
+    .stTextInput label,
+    .stTextArea label {
+        color: var(--text-primary) !important;
     }
     
     /* Status badges */
