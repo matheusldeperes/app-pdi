@@ -19,10 +19,10 @@ st.set_page_config(
 
 # Ajuste de cores para Light/Dark do Streamlit
 _theme_base = st.get_option("theme.base") or "dark"
-_header_bg = "linear-gradient(135deg, #000000 0%, #1a1a1a 100%)" if _theme_base == "dark" else "linear-gradient(135deg, #FFFFFF 0%, #F5F5F5 100%)"
+_header_bg = "linear-gradient(135deg, #FFFFFF 0%, #1a1a1a 100%)" if _theme_base == "dark" else "linear-gradient(135deg, #000000 0%, #F5F5F5 100%)"
 _header_text = "#FFFFFF" if _theme_base == "dark" else "#000000"
 _header_subtext = "#FFFFFF" if _theme_base == "dark" else "#4c4c4c"
-_text_primary = "#E0E0E0" if _theme_base == "dark" else "#000000"
+_text_primary = "#BBBBBB" if _theme_base == "dark" else "#000000"
 _text_secondary = "#BDBDBD" if _theme_base == "dark" else "#4c4c4c"
 
 # Configuração do Google Sheets
