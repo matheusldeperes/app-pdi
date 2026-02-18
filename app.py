@@ -16,6 +16,9 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
+from reportlab.lib.utils import ImageReader
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 # Configuração da página
 st.set_page_config(
@@ -322,30 +325,67 @@ def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
     )
 
     styles = getSampleStyleSheet()
+    body_font = "Helvetica"
+    bold_font = "Helvetica-Bold"
+
+    montserrat_regular = next((
+        p for p in [
+            Path("Montserrat-Regular.ttf"),
+            Path("fonts/Montserrat-Regular.ttf"),
+            Path("assets/Montserrat-Regular.ttf")
+        ] if p.exists()
+    ), None)
+
+    montserrat_bold = next((
+        p for p in [
+            Path("Montserrat-Bold.ttf"),
+            Path("fonts/Montserrat-Bold.ttf"),
+            Path("assets/Montserrat-Bold.ttf")
+        ] if p.exists()
+    ), None)
+
+    if montserrat_regular:
+        pdfmetrics.registerFont(TTFont("Montserrat", str(montserrat_regular)))
+        body_font = "Montserrat"
+    if montserrat_bold:
+        pdfmetrics.registerFont(TTFont("Montserrat-Bold", str(montserrat_bold)))
+        bold_font = "Montserrat-Bold"
+
     title_style = ParagraphStyle(
         "TitleCustom",
         parent=styles["Heading1"],
         alignment=1,
-        textColor=colors.HexColor("#000000")
+        textColor=colors.HexColor("#000000"),
+        fontName=bold_font
     )
     section_style = ParagraphStyle(
         "SectionCustom",
         parent=styles["Heading2"],
-        textColor=colors.HexColor("#FF6600")
+        textColor=colors.HexColor("#FF6600"),
+        fontName=bold_font
     )
     small_style = ParagraphStyle(
         "SmallCustom",
         parent=styles["BodyText"],
         fontSize=9,
-        leading=11
+        leading=11,
+        fontName=body_font
     )
+
+    styles["BodyText"].fontName = body_font
+    styles["Heading3"].fontName = bold_font
+    styles["Heading4"].fontName = bold_font
 
     story = []
 
     logo_path = Path("logo.png")
     header_row = []
     if logo_path.exists():
-        logo = Image(str(logo_path), width=3.2 * cm, height=3.2 * cm)
+        image_reader = ImageReader(str(logo_path))
+        img_width, img_height = image_reader.getSize()
+        max_height = 3.2 * cm
+        ratio = max_height / float(img_height)
+        logo = Image(str(logo_path), width=img_width * ratio, height=img_height * ratio)
         header_row.append(logo)
     else:
         header_row.append(Paragraph("", styles["BodyText"]))
@@ -385,7 +425,7 @@ def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
             ("TEXTCOLOR", (0, 0), (-1, -1), colors.HexColor("#000000")),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#E0E0E0")),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("FONTNAME", (0, 0), (-1, -1), "Helvetica")
+            ("FONTNAME", (0, 0), (-1, -1), body_font)
         ]))
         story.append(info_table)
         story.append(Spacer(1, 10))
@@ -409,7 +449,7 @@ def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
                 ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#FFFFFF")),
                 ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#E0E0E0")),
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("FONTNAME", (0, 0), (-1, -1), "Helvetica")
+                ("FONTNAME", (0, 0), (-1, -1), body_font)
             ]))
             story.append(scores_table)
             story.append(Spacer(1, 10))
@@ -1187,6 +1227,7 @@ elif modo == "Relatório":
             )
 
         with col2:
+            st.markdown("<div style='height: 27px;'></div>", unsafe_allow_html=True)
             if selecao == "Todos":
                 ids_selecionados = [id_col for id_col, _ in opcoes_colaboradores]
             else:
