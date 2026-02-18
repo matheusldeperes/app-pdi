@@ -15,7 +15,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
 
 # Configuração da página
 st.set_page_config(
@@ -309,8 +309,8 @@ def classificar_performance(total_pontos):
     else:
         return "RISCO", "#C62828"
 
-def gerar_pdf_relatorio_pdi(dados):
-    """Gera um PDF com todos os dados, pontuações e observações do PDI de cada colaborador."""
+def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
+    """Gera um PDF com dados, pontuações e observações do PDI de cada colaborador."""
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -341,11 +341,33 @@ def gerar_pdf_relatorio_pdi(dados):
     )
 
     story = []
-    story.append(Paragraph("Relatório completo de PDI", title_style))
+
+    logo_path = Path("logo.png")
+    header_row = []
+    if logo_path.exists():
+        logo = Image(str(logo_path), width=3.2 * cm, height=3.2 * cm)
+        header_row.append(logo)
+    else:
+        header_row.append(Paragraph("", styles["BodyText"]))
+
+    header_title = Paragraph("Avaliação do Colaborador", title_style)
+    header_row.append(header_title)
+
+    header_table = Table([header_row], colWidths=[4 * cm, 11 * cm])
+    header_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("ALIGN", (0, 0), (0, 0), "LEFT"),
+        ("ALIGN", (1, 0), (1, 0), "LEFT")
+    ]))
+    story.append(header_table)
     story.append(Paragraph(f"Gerado em {datetime.now().strftime('%d/%m/%Y %H:%M')}", small_style))
     story.append(Spacer(1, 12))
 
-    dados_ordenados = sorted(dados.items(), key=lambda x: x[1].get("nome", ""))
+    dados_filtrados = dados
+    if colaboradores_ids:
+        dados_filtrados = {k: v for k, v in dados.items() if k in colaboradores_ids}
+
+    dados_ordenados = sorted(dados_filtrados.items(), key=lambda x: x[1].get("nome", ""))
     for index, (id_col, dados_col) in enumerate(dados_ordenados, start=1):
         nome = dados_col.get("nome", "")
         story.append(Paragraph(f"Colaborador: {escape(nome)}", section_style))
@@ -1153,14 +1175,37 @@ elif modo == "Relatório":
         st.info("Nenhuma avaliação registrada ainda.")
     else:
         st.markdown('<h4 class="section-header">EXPORTAÇÃO DO RELATÓRIO COMPLETO</h4>', unsafe_allow_html=True)
-        pdf_bytes = gerar_pdf_relatorio_pdi(dados)
-        st.download_button(
-            label="📄 Baixar PDF completo do PDI",
-            data=pdf_bytes,
-            file_name=f"relatorio_pdi_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-            mime="application/pdf",
-            use_container_width=True
-        )
+
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            opcoes_colaboradores = [(id_col, dados_col["nome"]) for id_col, dados_col in dados.items()]
+            opcoes_colaboradores = sorted(opcoes_colaboradores, key=lambda x: x[1])
+            nomes_exibicao = ["Todos"] + [nome for _, nome in opcoes_colaboradores]
+            selecao = st.selectbox(
+                "Selecione o colaborador para imprimir",
+                nomes_exibicao
+            )
+
+        with col2:
+            if selecao == "Todos":
+                ids_selecionados = [id_col for id_col, _ in opcoes_colaboradores]
+            else:
+                ids_selecionados = [id_col for id_col, nome in opcoes_colaboradores if nome == selecao]
+
+            pdf_bytes = gerar_pdf_relatorio_pdi(dados, colaboradores_ids=ids_selecionados)
+            nome_arquivo = (
+                f"avaliacao_colaborador_{selecao.lower().replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
+                if selecao != "Todos"
+                else f"avaliacao_colaboradores_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
+            )
+
+            st.download_button(
+                label="📄 Baixar PDF",
+                data=pdf_bytes,
+                file_name=nome_arquivo,
+                mime="application/pdf",
+                use_container_width=True
+            )
 
         st.divider()
 
