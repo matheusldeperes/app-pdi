@@ -27,15 +27,31 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Detectar tema do Streamlit (light ou dark)
-try:
-    _theme_base = st.get_option("theme.base")
-    if not _theme_base:
-        _theme_base = "light"
-except:
-    _theme_base = "light"
+# Detectar tema automaticamente via JavaScript
+theme_detection = st.markdown("""
+<script>
+window.addEventListener('load', function() {
+    const theme = window.parent.document.body.getAttribute('data-theme') || 
+                  (window.parent.document.body.className.includes('dark') ? 'dark' : 'light');
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('theme') !== theme) {
+        params.set('theme', theme);
+        window.parent.location.search = params.toString();
+    }
+});
+</script>
+""", unsafe_allow_html=True)
 
-# Configurar cores baseado no tema
+# Obter tema dos query params ou usar padrão
+if 'theme' in st.query_params:
+    _theme_base = st.query_params['theme']
+else:
+    # Tentar detectar do Streamlit
+    try:
+        _theme_base = st.get_option("theme.base") or "light"
+    except:
+        _theme_base = "light"
+
 # LIGHT: fundo claro, fontes escuras, logo_light.png
 # DARK: fundo escuro, fontes claras, logo_dark.png
 if _theme_base == "dark":
@@ -871,7 +887,7 @@ except FileNotFoundError:
     """, unsafe_allow_html=True)
 
 # Sidebar para gerenciar colaboradores
-st.sidebar.divider()
+st.sidebar.title("GERENCIAMENTO")
 
 modo = st.sidebar.radio(
     "Selecione a ação:",
