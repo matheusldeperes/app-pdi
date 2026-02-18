@@ -504,6 +504,35 @@ def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
         story.append(Paragraph("Ações de Melhoria", styles["Heading4"]))
         story.append(Paragraph(acoes_texto, styles["BodyText"]))
 
+        # Seção de assinaturas
+        story.append(Spacer(1, 20))
+        story.append(Paragraph("Assinaturas", styles["Heading3"]))
+        story.append(Spacer(1, 15))
+
+        assinatura_data = [
+            ["", ""],
+            ["_" * 50, "_" * 50],
+            [escape(nome), escape(dados_col.get("avaliador", ""))],
+            ["Colaborador", "Avaliador"]
+        ]
+
+        assinatura_table = Table(assinatura_data, colWidths=[7.5 * cm, 7.5 * cm])
+        assinatura_table.setStyle(TableStyle([
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("VALIGN", (0, 0), (-1, -1), "BOTTOM"),
+            ("FONTNAME", (0, 2), (-1, 3), body_font),
+            ("FONTSIZE", (0, 2), (-1, 2), 10),
+            ("FONTSIZE", (0, 3), (-1, 3), 9),
+            ("TEXTCOLOR", (0, 3), (-1, 3), colors.HexColor("#4c4c4c")),
+            ("TOPPADDING", (0, 1), (-1, 1), 0),
+            ("BOTTOMPADDING", (0, 1), (-1, 1), 2)
+        ]))
+        story.append(assinatura_table)
+        story.append(Spacer(1, 10))
+        
+        data_avaliacao = dados_col.get("data", "")
+        story.append(Paragraph(f"Data da Avaliação: {escape(data_avaliacao)}", small_style))
+
         if index < len(dados_ordenados):
             story.append(PageBreak())
 
