@@ -27,18 +27,64 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Forçar tema LIGHT permanentemente (não detecta mudanças do Streamlit)
-_theme_base = "light"
-_header_bg = "linear-gradient(135deg, #F5F5F5 0%, #FFFFFF 100%)"
-_header_text = "#000000"
-_header_subtext = "#4c4c4c"
-_text_primary = "#000000"
-_text_secondary = "#4c4c4c"
-_logo_file = "logo_light.png"
+# Detectar tema automaticamente (sem UI adicional)
+st.markdown(
+        """
+<script>
+(function() {
+    function getTheme() {
+        const doc = window.parent.document;
+        const dataTheme = doc.documentElement.getAttribute('data-theme') || doc.body.getAttribute('data-theme');
+        if (dataTheme) return dataTheme.toLowerCase();
+        const className = (doc.body.className || '').toLowerCase();
+        if (className.includes('dark')) return 'dark';
+        if (className.includes('light')) return 'light';
+        return 'light';
+    }
+
+    function applyThemeParam() {
+        const theme = getTheme();
+        const url = new URL(window.parent.location.href);
+        if (url.searchParams.get('theme') !== theme) {
+            url.searchParams.set('theme', theme);
+            window.parent.location.replace(url.toString());
+        }
+    }
+
+    const doc = window.parent.document;
+    const observer = new MutationObserver(applyThemeParam);
+    observer.observe(doc.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+    observer.observe(doc.body, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+    applyThemeParam();
+})();
+</script>
+""",
+        unsafe_allow_html=True,
+)
+
+theme_param = st.query_params.get("theme", "light")
+theme_param = str(theme_param).lower()
+_theme_base = "dark" if theme_param == "dark" else "light"
+
+# Configurar cores baseado no tema do Streamlit
+if _theme_base == "dark":
+        _header_bg = "linear-gradient(135deg, #1a1a1a 0%, #000000 100%)"
+        _header_text = "#FFFFFF"
+        _header_subtext = "#CCCCCC"
+        _text_primary = "#FFFFFF"
+        _text_secondary = "#BDBDBD"
+        _logo_file = "logo_dark.png"
+else:
+        _header_bg = "linear-gradient(135deg, #F5F5F5 0%, #FFFFFF 100%)"
+        _header_text = "#000000"
+        _header_subtext = "#4c4c4c"
+        _text_primary = "#000000"
+        _text_secondary = "#4c4c4c"
+        _logo_file = "logo_light.png"
 
 # Fallback se logo específico não existir
 if not Path(_logo_file).exists():
-    _logo_file = "logo.png"
+        _logo_file = "logo.png"
 
 # Configuração do Google Sheets
 SCOPES = [
