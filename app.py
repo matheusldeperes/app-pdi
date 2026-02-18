@@ -585,10 +585,22 @@ _css_base = """
         --header-subtext: $header_subtext;
     }
     
-    /* Forçar cor de texto no modo dark */
+    /* Aplicar cores de texto baseadas no tema */
     [data-testid="stAppViewContainer"],
-    [data-testid="stAppViewContainer"] *:not(.stButton):not(.status-high):not(.status-medium):not(.status-low) {
-        color: $text_primary !important;
+    [data-testid="stAppViewContainer"] p,
+    [data-testid="stAppViewContainer"] span,
+    [data-testid="stAppViewContainer"] label,
+    [data-testid="stAppViewContainer"] div,
+    [data-testid="stAppViewContainer"] h1,
+    [data-testid="stAppViewContainer"] h2,
+    [data-testid="stAppViewContainer"] h3,
+    [data-testid="stAppViewContainer"] h4 {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Forçar cor em inputs e text areas */
+    input, textarea, select {
+        color: var(--text-primary) !important;
     }
     
     /* Fonte personalizada - Montserrat */
@@ -681,11 +693,6 @@ _css_base = """
     .subtitle-red,
     .subtitle-dark {
         margin-top: 0 !important;
-    }
-
-    /* Forçar cor de texto GLOBALMENTE */
-    * {
-        color: $text_primary !important;
     }
     
     /* Exceções para manter cores específicas */
