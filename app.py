@@ -312,7 +312,7 @@ def classificar_performance(total_pontos):
     else:
         return "RISCO", "#C62828"
 
-def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
+def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None, theme_base="light"):
     """Gera um PDF com dados, pontuações e observações do PDI de cada colaborador."""
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -389,8 +389,7 @@ def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
     story = []
 
     # Selecionar logo baseado no tema (prioriza logos específicos, fallback para logo.png)
-    theme = st.get_option("theme.base") or "light"
-    logo_file = f"logo_{theme}.png"
+    logo_file = f"logo_{theme_base}.png"
     logo_path = Path(logo_file) if Path(logo_file).exists() else Path("logo.png")
     
     header_row = []
@@ -1289,7 +1288,7 @@ elif modo == "Relatório":
             else:
                 ids_selecionados = [id_col for id_col, nome in opcoes_colaboradores if nome == selecao]
 
-            pdf_bytes = gerar_pdf_relatorio_pdi(dados, colaboradores_ids=ids_selecionados)
+            pdf_bytes = gerar_pdf_relatorio_pdi(dados, colaboradores_ids=ids_selecionados, theme_base=_theme_base)
             nome_arquivo = (
                 f"avaliacao_colaborador_{selecao.lower().replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
                 if selecao != "Todos"
