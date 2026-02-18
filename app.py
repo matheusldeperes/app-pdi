@@ -27,31 +27,43 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Detectar tema automaticamente via JavaScript
-theme_detection = st.markdown("""
+# Detectar tema automaticamente analisando o fundo da página
+detect_theme_css = """
 <script>
-window.addEventListener('load', function() {
-    const theme = window.parent.document.body.getAttribute('data-theme') || 
-                  (window.parent.document.body.className.includes('dark') ? 'dark' : 'light');
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('theme') !== theme) {
-        params.set('theme', theme);
-        window.parent.location.search = params.toString();
+function detectTheme() {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const rgb = bgColor.match(/\\d+/g);
+    
+    if (rgb) {
+        const [r, g, b] = rgb.map(Number);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness > 128 ? 'light' : 'dark';
     }
-});
+    return 'light';
+}
+
+// Armazenar tema e recarregar se mudar
+const currentTheme = detectTheme();
+const storedTheme = sessionStorage.getItem('streamlit_theme');
+
+if (storedTheme !== currentTheme) {
+    sessionStorage.setItem('streamlit_theme', currentTheme);
+    window.location.reload();
+}
 </script>
-""", unsafe_allow_html=True)
+"""
 
-# Obter tema dos query params ou usar padrão
-if 'theme' in st.query_params:
-    _theme_base = st.query_params['theme']
+st.markdown(detect_theme_css, unsafe_allow_html=True)
+
+# Obter tema armazenado ou detectar
+if 'streamlit_theme' in st.session_state:
+    _theme_base = st.session_state.streamlit_theme
 else:
-    # Tentar detectar do Streamlit
-    try:
-        _theme_base = st.get_option("theme.base") or "light"
-    except:
-        _theme_base = "light"
+    # Ler do sessionStorage via JavaScript (fallback para light)
+    _theme_base = "light"
+    st.session_state.streamlit_theme = "light"
 
+# Configurar cores baseado no tema detectado
 # LIGHT: fundo claro, fontes escuras, logo_light.png
 # DARK: fundo escuro, fontes claras, logo_dark.png
 if _theme_base == "dark":
