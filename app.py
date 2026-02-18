@@ -454,12 +454,13 @@ def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
             for criterio, nota in scores.items():
                 obs = observacoes.get(criterio, "")
                 scores_rows.append([
-                    escape(str(criterio)),
-                    escape(str(nota)),
-                    escape(str(obs))
+                    Paragraph(escape(str(criterio)), styles["BodyText"]),
+                    Paragraph(escape(str(nota)), styles["BodyText"]),
+                    Paragraph(escape(str(obs)), styles["BodyText"])
                 ])
 
-            scores_table = Table(scores_rows, colWidths=[5.5 * cm, 2 * cm, 7.5 * cm])
+            obs_col_width = max(doc.width - (4.5 * cm + 2 * cm), 7.5 * cm)
+            scores_table = Table(scores_rows, colWidths=[4.5 * cm, 2 * cm, obs_col_width])
             scores_table.setStyle(TableStyle([
                 ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#FF6600")),
                 ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#FFFFFF")),
