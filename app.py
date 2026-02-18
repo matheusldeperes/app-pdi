@@ -27,59 +27,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Detectar tema automaticamente analisando o fundo da página
-detect_theme_css = """
-<script>
-function detectTheme() {
-    const bgColor = window.getComputedStyle(document.body).backgroundColor;
-    const rgb = bgColor.match(/\\d+/g);
-    
-    if (rgb) {
-        const [r, g, b] = rgb.map(Number);
-        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-        return brightness > 128 ? 'light' : 'dark';
-    }
-    return 'light';
-}
-
-// Armazenar tema e recarregar se mudar
-const currentTheme = detectTheme();
-const storedTheme = sessionStorage.getItem('streamlit_theme');
-
-if (storedTheme !== currentTheme) {
-    sessionStorage.setItem('streamlit_theme', currentTheme);
-    window.location.reload();
-}
-</script>
-"""
-
-st.markdown(detect_theme_css, unsafe_allow_html=True)
-
-# Obter tema armazenado ou detectar
-if 'streamlit_theme' in st.session_state:
-    _theme_base = st.session_state.streamlit_theme
-else:
-    # Ler do sessionStorage via JavaScript (fallback para light)
-    _theme_base = "light"
-    st.session_state.streamlit_theme = "light"
-
-# Configurar cores baseado no tema detectado
-# LIGHT: fundo claro, fontes escuras, logo_light.png
-# DARK: fundo escuro, fontes claras, logo_dark.png
-if _theme_base == "dark":
-    _header_bg = "linear-gradient(135deg, #1a1a1a 0%, #000000 100%)"
-    _header_text = "#FFFFFF"
-    _header_subtext = "#CCCCCC"
-    _text_primary = "#FFFFFF"
-    _text_secondary = "#BDBDBD"
-    _logo_file = "logo_dark.png"
-else:  # light
-    _header_bg = "linear-gradient(135deg, #F5F5F5 0%, #FFFFFF 100%)"
-    _header_text = "#000000"
-    _header_subtext = "#4c4c4c"
-    _text_primary = "#000000"
-    _text_secondary = "#4c4c4c"
-    _logo_file = "logo_light.png"
+# Forçar tema LIGHT permanentemente (não detecta mudanças do Streamlit)
+_theme_base = "light"
+_header_bg = "linear-gradient(135deg, #F5F5F5 0%, #FFFFFF 100%)"
+_header_text = "#000000"
+_header_subtext = "#4c4c4c"
+_text_primary = "#000000"
+_text_secondary = "#4c4c4c"
+_logo_file = "logo_light.png"
 
 # Fallback se logo específico não existir
 if not Path(_logo_file).exists():
@@ -1344,7 +1299,7 @@ elif modo == "Relatório":
             else:
                 ids_selecionados = [id_col for id_col, nome in opcoes_colaboradores if nome == selecao]
 
-            pdf_bytes = gerar_pdf_relatorio_pdi(dados, colaboradores_ids=ids_selecionados, theme_base=_theme_base)
+            pdf_bytes = gerar_pdf_relatorio_pdi(dados, colaboradores_ids=ids_selecionados, theme_base="light")
             nome_arquivo = (
                 f"avaliacao_colaborador_{selecao.lower().replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
                 if selecao != "Todos"
