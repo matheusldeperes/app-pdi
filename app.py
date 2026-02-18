@@ -27,8 +27,21 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Ajuste de cores para Light/Dark do Streamlit
-_theme_base = st.get_option("theme.base") or "dark"
+# Seletor de tema ANTES de tudo (sidebar temporária)
+with st.sidebar:
+    st.title("GERENCIAMENTO")
+    if 'theme_mode' not in st.session_state:
+        st.session_state.theme_mode = "dark"
+    
+    st.session_state.theme_mode = st.selectbox(
+        "🎨 Tema do App:",
+        ["dark", "light"],
+        index=0 if st.session_state.theme_mode == "dark" else 1,
+        key="theme_selector"
+    )
+
+# Configurar cores baseado no tema selecionado
+_theme_base = st.session_state.theme_mode
 _header_bg = "linear-gradient(135deg, #FFFFFF 0%, #1a1a1a 100%)" if _theme_base == "dark" else "linear-gradient(135deg, #000000 0%, #F5F5F5 100%)"
 _header_text = "#FFFFFF" if _theme_base == "dark" else "#000000"
 _header_subtext = "#FFFFFF" if _theme_base == "dark" else "#4c4c4c"
@@ -844,7 +857,8 @@ except FileNotFoundError:
     """, unsafe_allow_html=True)
 
 # Sidebar para gerenciar colaboradores
-st.sidebar.title("GERENCIAMENTO")
+st.sidebar.divider()
+
 modo = st.sidebar.radio(
     "Selecione a ação:",
     ["Nova Avaliação", "Visualizar Colaboradores", "Relatório", "Feedbacks"]
