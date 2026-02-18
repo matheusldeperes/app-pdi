@@ -27,53 +27,35 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Detecção automática do tema do Streamlit usando JavaScript
-st.markdown("""
-<script>
-    // Detectar tema do Streamlit
-    function detectTheme() {
-        const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const streamlitDoc = window.parent.document;
-        const bodyClass = streamlitDoc.body.className;
-        
-        // Verifica se o body tem a classe que indica tema escuro
-        if (bodyClass.includes('dark') || streamlitDoc.documentElement.getAttribute('data-theme') === 'dark') {
-            return 'dark';
-        }
-        return 'light';
-    }
-    
-    const theme = detectTheme();
-    window.parent.postMessage({type: 'streamlit:setComponentValue', value: theme}, '*');
-</script>
-""", unsafe_allow_html=True)
+# Detectar tema do Streamlit (light ou dark)
+try:
+    _theme_base = st.get_option("theme.base")
+    if not _theme_base:
+        _theme_base = "light"
+except:
+    _theme_base = "light"
 
-# Inicializar tema no session_state
-if 'detected_theme' not in st.session_state:
-    # Tentar detectar tema do Streamlit
-    try:
-        theme_base = st.get_option("theme.base")
-        st.session_state.detected_theme = theme_base if theme_base else "light"
-    except:
-        st.session_state.detected_theme = "light"
+# Configurar cores baseado no tema
+# LIGHT: fundo claro, fontes escuras, logo_light.png
+# DARK: fundo escuro, fontes claras, logo_dark.png
+if _theme_base == "dark":
+    _header_bg = "linear-gradient(135deg, #1a1a1a 0%, #000000 100%)"
+    _header_text = "#FFFFFF"
+    _header_subtext = "#CCCCCC"
+    _text_primary = "#FFFFFF"
+    _text_secondary = "#BDBDBD"
+    _logo_file = "logo_dark.png"
+else:  # light
+    _header_bg = "linear-gradient(135deg, #F5F5F5 0%, #FFFFFF 100%)"
+    _header_text = "#000000"
+    _header_subtext = "#4c4c4c"
+    _text_primary = "#000000"
+    _text_secondary = "#4c4c4c"
+    _logo_file = "logo_light.png"
 
-# Adicionar botão para alternar manualmente (sincronizado com Streamlit)
-with st.sidebar:
-    st.title("GERENCIAMENTO")
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.caption("💡 Altere o tema em: ⋮ → Settings → Theme")
-    with col2:
-        if st.button("🔄"):
-            st.rerun()
-
-# Configurar cores baseado no tema detectado
-_theme_base = st.session_state.detected_theme
-_header_bg = "linear-gradient(135deg, #FFFFFF 0%, #1a1a1a 100%)" if _theme_base == "dark" else "linear-gradient(135deg, #000000 0%, #F5F5F5 100%)"
-_header_text = "#FFFFFF" if _theme_base == "dark" else "#000000"
-_header_subtext = "#FFFFFF" if _theme_base == "dark" else "#4c4c4c"
-_text_primary = "#BBBBBB" if _theme_base == "dark" else "#000000"
-_text_secondary = "#BDBDBD" if _theme_base == "dark" else "#4c4c4c"
+# Fallback se logo específico não existir
+if not Path(_logo_file).exists():
+    _logo_file = "logo.png"
 
 # Configuração do Google Sheets
 SCOPES = [
@@ -428,9 +410,10 @@ def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None, theme_base="light"):
 
     story = []
 
-    # Selecionar logo baseado no tema (prioriza logos específicos, fallback para logo.png)
-    logo_file = f"logo_{theme_base}.png"
-    logo_path = Path(logo_file) if Path(logo_file).exists() else Path("logo.png")
+    # PDF SEMPRE usa logo_light.png
+    logo_path = Path("logo_light.png")
+    if not logo_path.exists():
+        logo_path = Path("logo.png")
     
     header_row = []
     logo_display_width = 0
@@ -864,10 +847,7 @@ st.markdown("""
 try:
     col_logo, col_text = st.columns([0.8, 3])
     with col_logo:
-        logo_file = "logo_dark.png" if _theme_base == "dark" else "logo_light.png"
-        if not Path(logo_file).exists():
-            logo_file = "logo.png"
-        st.image(logo_file, width=180)
+        st.image(_logo_file, width=180)
     with col_text:
         st.markdown("""
         <div class="header-text">
