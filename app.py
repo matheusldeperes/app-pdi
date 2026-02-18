@@ -1230,6 +1230,9 @@ elif modo == "Relatório":
     if not dados:
         st.info("Nenhuma avaliação registrada ainda.")
     else:
+        if not (Path("fonts/Montserrat-Regular.ttf").exists() and Path("fonts/Montserrat-Bold.ttf").exists()):
+            st.warning("Fonte Montserrat não encontrada em fonts/. Para manter a identidade visual, adicione Montserrat-Regular.ttf e Montserrat-Bold.ttf nessa pasta.")
+
         st.markdown('<h4 class="section-header">EXPORTAÇÃO DO RELATÓRIO COMPLETO</h4>', unsafe_allow_html=True)
 
         col1, col2 = st.columns([2, 1])
