@@ -388,7 +388,11 @@ def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
 
     story = []
 
-    logo_path = Path("logo.png")
+    # Selecionar logo baseado no tema (prioriza logos específicos, fallback para logo.png)
+    theme = st.get_option("theme.base") or "light"
+    logo_file = f"logo_{theme}.png"
+    logo_path = Path(logo_file) if Path(logo_file).exists() else Path("logo.png")
+    
     header_row = []
     logo_display_width = 0
     if logo_path.exists():
@@ -821,7 +825,10 @@ st.markdown("""
 try:
     col_logo, col_text = st.columns([0.8, 3])
     with col_logo:
-        st.image("logo.png", width=180)
+        logo_file = "logo_dark.png" if _theme_base == "dark" else "logo_light.png"
+        if not Path(logo_file).exists():
+            logo_file = "logo.png"
+        st.image(logo_file, width=180)
     with col_text:
         st.markdown("""
         <div class="header-text">
