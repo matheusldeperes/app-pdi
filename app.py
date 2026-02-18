@@ -27,21 +27,48 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Seletor de tema ANTES de tudo (sidebar temporária)
+# Detecção automática do tema do Streamlit usando JavaScript
+st.markdown("""
+<script>
+    // Detectar tema do Streamlit
+    function detectTheme() {
+        const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const streamlitDoc = window.parent.document;
+        const bodyClass = streamlitDoc.body.className;
+        
+        // Verifica se o body tem a classe que indica tema escuro
+        if (bodyClass.includes('dark') || streamlitDoc.documentElement.getAttribute('data-theme') === 'dark') {
+            return 'dark';
+        }
+        return 'light';
+    }
+    
+    const theme = detectTheme();
+    window.parent.postMessage({type: 'streamlit:setComponentValue', value: theme}, '*');
+</script>
+""", unsafe_allow_html=True)
+
+# Inicializar tema no session_state
+if 'detected_theme' not in st.session_state:
+    # Tentar detectar tema do Streamlit
+    try:
+        theme_base = st.get_option("theme.base")
+        st.session_state.detected_theme = theme_base if theme_base else "light"
+    except:
+        st.session_state.detected_theme = "light"
+
+# Adicionar botão para alternar manualmente (sincronizado com Streamlit)
 with st.sidebar:
     st.title("GERENCIAMENTO")
-    if 'theme_mode' not in st.session_state:
-        st.session_state.theme_mode = "dark"
-    
-    st.session_state.theme_mode = st.selectbox(
-        "🎨 Tema do App:",
-        ["dark", "light"],
-        index=0 if st.session_state.theme_mode == "dark" else 1,
-        key="theme_selector"
-    )
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.caption("💡 Altere o tema em: ⋮ → Settings → Theme")
+    with col2:
+        if st.button("🔄"):
+            st.rerun()
 
-# Configurar cores baseado no tema selecionado
-_theme_base = st.session_state.theme_mode
+# Configurar cores baseado no tema detectado
+_theme_base = st.session_state.detected_theme
 _header_bg = "linear-gradient(135deg, #FFFFFF 0%, #1a1a1a 100%)" if _theme_base == "dark" else "linear-gradient(135deg, #000000 0%, #F5F5F5 100%)"
 _header_text = "#FFFFFF" if _theme_base == "dark" else "#000000"
 _header_subtext = "#FFFFFF" if _theme_base == "dark" else "#4c4c4c"
