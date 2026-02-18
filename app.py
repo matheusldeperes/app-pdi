@@ -332,7 +332,11 @@ def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
         p for p in [
             Path("Montserrat-Regular.ttf"),
             Path("fonts/Montserrat-Regular.ttf"),
-            Path("assets/Montserrat-Regular.ttf")
+            Path("assets/Montserrat-Regular.ttf"),
+            Path.home() / "Library/Fonts/Montserrat-Regular.ttf",
+            Path.home() / "Library/Fonts/Montserrat-Regular.otf",
+            Path("/Library/Fonts/Montserrat-Regular.ttf"),
+            Path("/Library/Fonts/Montserrat-Regular.otf")
         ] if p.exists()
     ), None)
 
@@ -340,7 +344,11 @@ def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
         p for p in [
             Path("Montserrat-Bold.ttf"),
             Path("fonts/Montserrat-Bold.ttf"),
-            Path("assets/Montserrat-Bold.ttf")
+            Path("assets/Montserrat-Bold.ttf"),
+            Path.home() / "Library/Fonts/Montserrat-Bold.ttf",
+            Path.home() / "Library/Fonts/Montserrat-Bold.otf",
+            Path("/Library/Fonts/Montserrat-Bold.ttf"),
+            Path("/Library/Fonts/Montserrat-Bold.otf")
         ] if p.exists()
     ), None)
 
@@ -350,6 +358,8 @@ def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
     if montserrat_bold:
         pdfmetrics.registerFont(TTFont("Montserrat-Bold", str(montserrat_bold)))
         bold_font = "Montserrat-Bold"
+    if body_font == "Montserrat" and bold_font == "Montserrat-Bold":
+        pdfmetrics.registerFontFamily("Montserrat", normal="Montserrat", bold="Montserrat-Bold")
 
     title_style = ParagraphStyle(
         "TitleCustom",
@@ -380,12 +390,14 @@ def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
 
     logo_path = Path("logo.png")
     header_row = []
+    logo_display_width = 0
     if logo_path.exists():
         image_reader = ImageReader(str(logo_path))
         img_width, img_height = image_reader.getSize()
         max_height = 3.2 * cm
         ratio = max_height / float(img_height)
-        logo = Image(str(logo_path), width=img_width * ratio, height=img_height * ratio)
+        logo_display_width = img_width * ratio
+        logo = Image(str(logo_path), width=logo_display_width, height=img_height * ratio)
         header_row.append(logo)
     else:
         header_row.append(Paragraph("", styles["BodyText"]))
@@ -393,11 +405,15 @@ def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
     header_title = Paragraph("Avaliação do Colaborador", title_style)
     header_row.append(header_title)
 
-    header_table = Table([header_row], colWidths=[4 * cm, 11 * cm])
+    first_col_width = max(logo_display_width + 0.5 * cm, 3.5 * cm)
+    second_col_width = max(doc.width - first_col_width, 8 * cm)
+    header_table = Table([header_row], colWidths=[first_col_width, second_col_width])
     header_table.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("ALIGN", (0, 0), (0, 0), "LEFT"),
-        ("ALIGN", (1, 0), (1, 0), "LEFT")
+        ("ALIGN", (1, 0), (1, 0), "CENTER"),
+        ("LEFTPADDING", (1, 0), (1, 0), 0),
+        ("RIGHTPADDING", (1, 0), (1, 0), 0)
     ]))
     story.append(header_table)
     story.append(Paragraph(f"Gerado em {datetime.now().strftime('%d/%m/%Y %H:%M')}", small_style))
