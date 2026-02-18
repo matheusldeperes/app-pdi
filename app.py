@@ -30,29 +30,30 @@ st.set_page_config(
 )
 
 # -----------------------------------------------------------------------------
-# 2. CSS RESPONSIVO (A CORREÇÃO PRINCIPAL)
+# 2. CSS RESPONSIVO E CORREÇÃO DE TEMA (MODIFICADO AQUI)
 # -----------------------------------------------------------------------------
-# Aqui definimos variáveis que mudam automaticamente dependendo do tema do usuário
+# Removemos o Javascript e o Python que tentava adivinhar o tema.
+# Usamos CSS nativo com variáveis para controlar as cores.
+
 st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-    /* VARIAVEIS GLOBAIS DE TEMA */
+    /* DEFINIÇÃO DE VARIÁVEIS DE CORES (LIGHT VS DARK) */
     :root {
         --primary-font: 'Montserrat', 'Segoe UI', sans-serif;
         
-        /* Cores Padrão (Light Mode) */
+        /* Cores LIGHT (Padrão) */
         --bg-color: #FAFAFA;
         --text-primary: #000000;
         --text-secondary: #4c4c4c;
         --header-bg: linear-gradient(135deg, #F5F5F5 0%, #FFFFFF 100%);
         --header-text: #000000;
         --header-subtext: #4c4c4c;
-        --card-bg: #FFFFFF;
         --border-color: #E0E0E0;
-        --logo-filter: none; /* Logo normal no light */
+        --logo-filter: none;
     }
 
-    /* Cores Sobrescritas (Dark Mode) - O navegador aplica isso automaticamente */
+    /* Cores DARK (Automático pelo navegador) */
     @media (prefers-color-scheme: dark) {
         :root {
             --bg-color: #0E1117;
@@ -61,9 +62,8 @@ st.markdown("""
             --header-bg: linear-gradient(135deg, #262730 0%, #1a1c24 100%);
             --header-text: #FFFFFF;
             --header-subtext: #BDBDBD;
-            --card-bg: #262730;
             --border-color: #4A4A4A;
-            /* Inverte as cores da imagem (logo preto vira branco) */
+            /* Inverte as cores da logo se ela for escura */
             --logo-filter: invert(1) brightness(2); 
         }
     }
@@ -72,14 +72,13 @@ st.markdown("""
     html, body, [class*="css"] {
         font-family: var(--primary-font);
     }
-    
-    /* Força a cor do texto principal do Streamlit a obedecer nossa variável */
+
+    /* Forçar containers do Streamlit a usar nossas variáveis */
     [data-testid="stAppViewContainer"] {
-        background-color: var(--bg-color);
-        color: var(--text-primary);
+        color: var(--text-primary) !important;
     }
     
-    /* Header Personalizado */
+    /* Header Customizado */
     .header-wrapper {
         background: var(--header-bg);
         padding: 20px 30px;
@@ -107,7 +106,7 @@ st.markdown("""
         font-weight: 400;
     }
 
-    /* Classe para inverter cor do logo no modo dark */
+    /* Logo responsivo */
     .logo-img {
         filter: var(--logo-filter);
         transition: filter 0.3s ease;
@@ -126,20 +125,16 @@ st.markdown("""
         letter-spacing: 0.5px;
     }
 
-    /* Inputs e Selects */
-    .stTextInput input, .stSelectbox div[data-baseweb="select"] > div, .stTextArea textarea {
-        background-color: transparent !important;
+    /* Inputs e Text Areas - Correção Crítica para Dark Mode */
+    .stTextInput input, .stSelectbox div[data-baseweb="select"] > div, .stTextArea textarea, .stDateInput input {
         color: var(--text-primary) !important;
+        background-color: transparent !important; 
         border: 1px solid var(--border-color) !important;
     }
     
     /* Métricas */
-    [data-testid="stMetricLabel"] {
-        color: var(--text-secondary) !important;
-    }
-    [data-testid="stMetricValue"] {
-        color: var(--text-primary) !important;
-    }
+    [data-testid="stMetricLabel"] { color: var(--text-secondary) !important; }
+    [data-testid="stMetricValue"] { color: var(--text-primary) !important; }
 
     /* Subtítulos Coloridos */
     .subtitle-green { color: #4CAF50 !important; font-weight: 700; }
@@ -147,7 +142,7 @@ st.markdown("""
     .subtitle-blue { color: #2196F3 !important; font-weight: 700; margin-top: 20px; }
     .subtitle-dark { color: var(--text-primary) !important; font-weight: 700; }
 
-    /* Badges de Status */
+    /* Badges */
     .status-high { background-color: rgba(27, 94, 32, 0.1); color: #4CAF50; padding: 10px 18px; border-radius: 20px; font-weight: 600; border: 1px solid #4CAF50; display: inline-block;}
     .status-medium { background-color: rgba(230, 81, 0, 0.1); color: #FF9800; padding: 10px 18px; border-radius: 20px; font-weight: 600; border: 1px solid #FF9800; display: inline-block;}
     .status-low { background-color: rgba(198, 40, 40, 0.1); color: #F44336; padding: 10px 18px; border-radius: 20px; font-weight: 600; border: 1px solid #F44336; display: inline-block;}
@@ -158,12 +153,15 @@ st.markdown("""
         color: white !important;
         border: none;
         font-weight: 600;
+        padding: 12px 24px;
+        border-radius: 6px;
+        text-transform: uppercase;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
-# 3. FUNÇÕES DE SUPORTE (GOOGLE SHEETS E PDF)
+# 3. FUNÇÕES (MANTIDAS EXATAMENTE COMO NO ORIGINAL)
 # -----------------------------------------------------------------------------
 
 SCOPES = [
@@ -171,16 +169,19 @@ SCOPES = [
     'https://www.googleapis.com/auth/drive'
 ]
 
+# Função para conectar ao Google Sheets
 @st.cache_resource
 def conectar_google_sheets():
     """Conecta ao Google Sheets usando credenciais do Streamlit Secrets"""
     try:
+        # Tenta carregar credenciais do Streamlit Secrets (para Streamlit Cloud)
         if "gcp_service_account" in st.secrets:
             credentials_dict = dict(st.secrets["gcp_service_account"])
             credentials = Credentials.from_service_account_info(
                 credentials_dict,
                 scopes=SCOPES
             )
+        # Fallback para arquivo local (desenvolvimento)
         elif os.path.exists("service_account.json"):
             credentials = Credentials.from_service_account_file(
                 "service_account.json",
@@ -188,6 +189,7 @@ def conectar_google_sheets():
             )
         else:
             st.error("Credenciais do Google não encontradas!")
+            st.info("Configure as credenciais em .streamlit/secrets.toml ou service_account.json")
             st.stop()
         
         client = gspread.authorize(credentials)
@@ -196,20 +198,31 @@ def conectar_google_sheets():
         st.error(f"Erro ao conectar ao Google Sheets: {str(e)}")
         st.stop()
 
+# Função para obter ou criar planilha
 @st.cache_resource
 def obter_planilha():
+    """Obtém ou cria a planilha de avaliações"""
     client = conectar_google_sheets()
-    sheet_name = st.secrets.get("sheet_name", "Avaliações PDI - SATTE ALAM")
-    try:
-        spreadsheet = client.open(sheet_name)
-    except gspread.exceptions.SpreadsheetNotFound:
-        spreadsheet = client.create(sheet_name)
     
+    # Nome da planilha (pode ser configurado)
+    sheet_name = st.secrets.get("sheet_name", "Avaliações PDI - SATTE ALAM")
+    
+    try:
+        # Tenta abrir planilha existente
+        spreadsheet = client.open(sheet_name)
+        st.success(f"Conectado à planilha: {sheet_name}")
+    except gspread.exceptions.SpreadsheetNotFound:
+        # Cria nova planilha se não existir
+        spreadsheet = client.create(sheet_name)
+        st.success(f"Nova planilha criada: {sheet_name}")
+    
+    # Obtém ou cria a primeira aba
     headers = [
         "ID", "Nome", "Avaliador", "Data", "Scores_JSON", "Observacoes_JSON",
         "Opiniao", "Total_Pontos", "Classificacao", "Pontos_Fortes_JSON",
         "Gargalos_JSON", "Acoes_Melhoria_JSON", "Timestamp"
     ]
+
     try:
         worksheet = spreadsheet.worksheet("Avaliações")
         current_headers = worksheet.row_values(1)
@@ -217,31 +230,44 @@ def obter_planilha():
             worksheet.update('A1:M1', [headers])
     except:
         worksheet = spreadsheet.add_worksheet(title="Avaliações", rows=1000, cols=20)
+        # Adiciona cabeçalhos
         worksheet.update('A1:M1', [headers])
+    
     return worksheet
 
+# Função para obter ou criar planilha de feedbacks
 @st.cache_resource
 def obter_planilha_feedbacks():
+    """Obtém ou cria a planilha de feedbacks"""
     client = conectar_google_sheets()
     sheet_name = st.secrets.get("sheet_name", "Avaliações PDI - SATTE ALAM")
+
     try:
         spreadsheet = client.open(sheet_name)
     except gspread.exceptions.SpreadsheetNotFound:
         spreadsheet = client.create(sheet_name)
+
     headers = ["ID", "Nome", "DataHora", "Motivo", "Feedback", "Timestamp"]
+
     try:
         worksheet = spreadsheet.worksheet("Feedbacks")
-        if worksheet.row_values(1) != headers:
+        current_headers = worksheet.row_values(1)
+        if current_headers != headers:
             worksheet.update('A1:F1', [headers])
     except:
         worksheet = spreadsheet.add_worksheet(title="Feedbacks", rows=1000, cols=10)
         worksheet.update('A1:F1', [headers])
+
     return worksheet
 
+# Função para carregar dados do Google Sheets
 def carregar_dados():
+    """Carrega dados do Google Sheets e converte para formato dict"""
     try:
         worksheet = obter_planilha()
         records = worksheet.get_all_records()
+        
+        # Converter para formato dict
         dados = {}
         for record in records:
             if record.get('ID'):
@@ -260,65 +286,108 @@ def carregar_dados():
                     'acoes_melhoria': json.loads(record.get('Acoes_Melhoria_JSON', '[]')),
                     'timestamp': record.get('Timestamp', '')
                 }
+        
         return dados
     except Exception as e:
         st.error(f"Erro ao carregar dados: {str(e)}")
         return {}
 
+# Função para salvar dados no Google Sheets (SEGURA - sem deletar)
 def salvar_dados(dados):
+    """Salva dados no Google Sheets de forma segura - APENAS ADICIONA NOVOS REGISTROS"""
     try:
         worksheet = obter_planilha()
         records = worksheet.get_all_records()
+        
+        # IDs existentes na planilha
         ids_existentes = set(r.get('ID', '') for r in records if r.get('ID'))
+        
+        # Encontra novos registros para adicionar
         for id_col, info in dados.items():
             if id_col not in ids_existentes:
+                # Novo registro - adiciona como nova linha
                 row = [
-                    id_col, info.get('nome', ''), info.get('avaliador', ''),
-                    info.get('data', ''), json.dumps(info.get('scores', {}), ensure_ascii=False),
+                    id_col,
+                    info.get('nome', ''),
+                    info.get('avaliador', ''),
+                    info.get('data', ''),
+                    json.dumps(info.get('scores', {}), ensure_ascii=False),
                     json.dumps(info.get('observacoes', {}), ensure_ascii=False),
-                    info.get('opiniao', ''), info.get('total_pontos', 0),
-                    info.get('classificacao', ''), json.dumps(info.get('pontos_fortes', []), ensure_ascii=False),
+                    info.get('opiniao', ''),
+                    info.get('total_pontos', 0),
+                    info.get('classificacao', ''),
+                    json.dumps(info.get('pontos_fortes', []), ensure_ascii=False),
                     json.dumps(info.get('gargalos', []), ensure_ascii=False),
                     json.dumps(info.get('acoes_melhoria', []), ensure_ascii=False),
                     info.get('timestamp', '')
                 ]
                 worksheet.append_row(row)
+        
         return True
     except Exception as e:
-        st.error(f"Erro ao salvar: {str(e)}")
+        st.error(f"Erro ao salvar dados: {str(e)}")
+        st.warning("⚠️ **Aviso:** Houve um problema ao salvar. Verifique o Google Sheets manualmente e faça backup dos dados se necessário.")
         return False
 
+# Função para atualizar um registro individual (mais seguro)
 def atualizar_avaliacao(id_colaborador, dados_atualizados):
+    """Atualiza uma avaliação individual sem deletar outras"""
     try:
         worksheet = obter_planilha()
         records = worksheet.get_all_records()
+        
+        # Encontra a linha do colaborador
         linha_encontrada = None
-        for idx, record in enumerate(records, start=2):
+        for idx, record in enumerate(records, start=2):  # Começa de 2 porque 1 é cabeçalho
             if record.get('ID') == id_colaborador:
                 linha_encontrada = idx
                 break
         
-        row_data = [
-            id_colaborador, dados_atualizados.get('nome', ''), dados_atualizados.get('avaliador', ''),
-            dados_atualizados.get('data', ''), json.dumps(dados_atualizados.get('scores', {}), ensure_ascii=False),
-            json.dumps(dados_atualizados.get('observacoes', {}), ensure_ascii=False),
-            dados_atualizados.get('opiniao', ''), dados_atualizados.get('total_pontos', 0),
-            dados_atualizados.get('classificacao', ''), json.dumps(dados_atualizados.get('pontos_fortes', []), ensure_ascii=False),
-            json.dumps(dados_atualizados.get('gargalos', []), ensure_ascii=False),
-            json.dumps(dados_atualizados.get('acoes_melhoria', []), ensure_ascii=False),
-            dados_atualizados.get('timestamp', '')
-        ]
-        
         if linha_encontrada is None:
-            worksheet.append_row(row_data)
+            # Se não encontrou, adiciona como nova linha
+            row = [
+                id_colaborador,
+                dados_atualizados.get('nome', ''),
+                dados_atualizados.get('avaliador', ''),
+                dados_atualizados.get('data', ''),
+                json.dumps(dados_atualizados.get('scores', {}), ensure_ascii=False),
+                json.dumps(dados_atualizados.get('observacoes', {}), ensure_ascii=False),
+                dados_atualizados.get('opiniao', ''),
+                dados_atualizados.get('total_pontos', 0),
+                dados_atualizados.get('classificacao', ''),
+                json.dumps(dados_atualizados.get('pontos_fortes', []), ensure_ascii=False),
+                json.dumps(dados_atualizados.get('gargalos', []), ensure_ascii=False),
+                json.dumps(dados_atualizados.get('acoes_melhoria', []), ensure_ascii=False),
+                dados_atualizados.get('timestamp', '')
+            ]
+            worksheet.append_row(row)
         else:
-            worksheet.update(f'A{linha_encontrada}:M{linha_encontrada}', [row_data])
+            # Atualiza a linha encontrada
+            row = [
+                id_colaborador,
+                dados_atualizados.get('nome', ''),
+                dados_atualizados.get('avaliador', ''),
+                dados_atualizados.get('data', ''),
+                json.dumps(dados_atualizados.get('scores', {}), ensure_ascii=False),
+                json.dumps(dados_atualizados.get('observacoes', {}), ensure_ascii=False),
+                dados_atualizados.get('opiniao', ''),
+                dados_atualizados.get('total_pontos', 0),
+                dados_atualizados.get('classificacao', ''),
+                json.dumps(dados_atualizados.get('pontos_fortes', []), ensure_ascii=False),
+                json.dumps(dados_atualizados.get('gargalos', []), ensure_ascii=False),
+                json.dumps(dados_atualizados.get('acoes_melhoria', []), ensure_ascii=False),
+                dados_atualizados.get('timestamp', '')
+            ]
+            worksheet.update(f'A{linha_encontrada}:M{linha_encontrada}', [row])
+        
         return True
     except Exception as e:
-        st.error(f"Erro ao atualizar: {str(e)}")
+        st.error(f"Erro ao atualizar avaliação: {str(e)}")
         return False
 
+# Funções de feedbacks
 def carregar_feedbacks():
+    """Carrega feedbacks do Google Sheets"""
     try:
         worksheet = obter_planilha_feedbacks()
         records = worksheet.get_all_records()
@@ -326,9 +395,12 @@ def carregar_feedbacks():
         for record in records:
             if record.get('ID'):
                 feedbacks.append({
-                    'id': record.get('ID', ''), 'nome': record.get('Nome', ''),
-                    'datahora': record.get('DataHora', ''), 'motivo': record.get('Motivo', ''),
-                    'feedback': record.get('Feedback', ''), 'timestamp': record.get('Timestamp', '')
+                    'id': record.get('ID', ''),
+                    'nome': record.get('Nome', ''),
+                    'datahora': record.get('DataHora', ''),
+                    'motivo': record.get('Motivo', ''),
+                    'feedback': record.get('Feedback', ''),
+                    'timestamp': record.get('Timestamp', '')
                 })
         return feedbacks
     except Exception as e:
@@ -336,20 +408,30 @@ def carregar_feedbacks():
         return []
 
 def salvar_feedback(nome, motivo, feedback_texto):
+    """Salva feedback individual no Google Sheets"""
     try:
         worksheet = obter_planilha_feedbacks()
         datahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         feedback_id = f"{nome}_{datahora}"
-        row = [feedback_id, nome, datahora, motivo, feedback_texto, datetime.now().isoformat()]
+        row = [
+            feedback_id,
+            nome,
+            datahora,
+            motivo,
+            feedback_texto,
+            datetime.now().isoformat()
+        ]
         worksheet.append_row(row)
         return True
     except Exception as e:
         st.error(f"Erro ao salvar feedback: {str(e)}")
         return False
 
+# Função para calcular pontuação total
 def calcular_total(scores):
     return sum(scores.values()) if scores else 0
 
+# Função para classificar performance
 def classificar_performance(total_pontos):
     if total_pontos >= 40:
         return "ALTO DESEMPENHO", "#00796B"
@@ -358,108 +440,233 @@ def classificar_performance(total_pontos):
     else:
         return "RISCO", "#C62828"
 
-def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
-    """Gera PDF - Mantém tema Light (Papel Branco)"""
+def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None, theme_base="light"):
+    """Gera um PDF com dados, pontuações e observações do PDI de cada colaborador."""
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=2*cm, rightMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=2 * cm,
+        rightMargin=2 * cm,
+        topMargin=2 * cm,
+        bottomMargin=2 * cm
+    )
+
     styles = getSampleStyleSheet()
-    
-    # Fontes
     body_font = "Helvetica"
     bold_font = "Helvetica-Bold"
-    
-    # Tentar carregar Montserrat (opcional)
-    font_paths = ["Montserrat-Regular.ttf", "fonts/Montserrat-Regular.ttf", "assets/Montserrat-Regular.ttf"]
-    montserrat_regular = next((p for p in font_paths if os.path.exists(p)), None)
-    
-    font_bold_paths = ["Montserrat-Bold.ttf", "fonts/Montserrat-Bold.ttf", "assets/Montserrat-Bold.ttf"]
-    montserrat_bold = next((p for p in font_bold_paths if os.path.exists(p)), None)
 
-    if montserrat_regular and montserrat_bold:
-        pdfmetrics.registerFont(TTFont("Montserrat", montserrat_regular))
-        pdfmetrics.registerFont(TTFont("Montserrat-Bold", montserrat_bold))
+    montserrat_regular = next((
+        p for p in [
+            Path("Montserrat-Regular.ttf"),
+            Path("fonts/Montserrat-Regular.ttf"),
+            Path("assets/Montserrat-Regular.ttf"),
+            Path.home() / "Library/Fonts/Montserrat-Regular.ttf",
+            Path.home() / "Library/Fonts/Montserrat-Regular.otf",
+            Path("/Library/Fonts/Montserrat-Regular.ttf"),
+            Path("/Library/Fonts/Montserrat-Regular.otf")
+        ] if p.exists()
+    ), None)
+
+    montserrat_bold = next((
+        p for p in [
+            Path("Montserrat-Bold.ttf"),
+            Path("fonts/Montserrat-Bold.ttf"),
+            Path("assets/Montserrat-Bold.ttf"),
+            Path.home() / "Library/Fonts/Montserrat-Bold.ttf",
+            Path.home() / "Library/Fonts/Montserrat-Bold.otf",
+            Path("/Library/Fonts/Montserrat-Bold.ttf"),
+            Path("/Library/Fonts/Montserrat-Bold.otf")
+        ] if p.exists()
+    ), None)
+
+    if montserrat_regular:
+        pdfmetrics.registerFont(TTFont("Montserrat", str(montserrat_regular)))
         body_font = "Montserrat"
+    if montserrat_bold:
+        pdfmetrics.registerFont(TTFont("Montserrat-Bold", str(montserrat_bold)))
         bold_font = "Montserrat-Bold"
+    if body_font == "Montserrat" and bold_font == "Montserrat-Bold":
+        pdfmetrics.registerFontFamily("Montserrat", normal="Montserrat", bold="Montserrat-Bold")
 
-    title_style = ParagraphStyle("TitleCustom", parent=styles["Heading1"], alignment=1, textColor=colors.HexColor("#000000"), fontName=bold_font)
-    section_style = ParagraphStyle("SectionCustom", parent=styles["Heading2"], textColor=colors.HexColor("#FF6600"), fontName=bold_font)
-    small_style = ParagraphStyle("SmallCustom", parent=styles["BodyText"], fontSize=9, leading=11, fontName=body_font)
+    title_style = ParagraphStyle(
+        "TitleCustom",
+        parent=styles["Heading1"],
+        alignment=1,
+        textColor=colors.HexColor("#000000"),
+        fontName=bold_font
+    )
+    section_style = ParagraphStyle(
+        "SectionCustom",
+        parent=styles["Heading2"],
+        textColor=colors.HexColor("#FF6600"),
+        fontName=bold_font
+    )
+    small_style = ParagraphStyle(
+        "SmallCustom",
+        parent=styles["BodyText"],
+        fontSize=9,
+        leading=11,
+        fontName=body_font
+    )
+
     styles["BodyText"].fontName = body_font
+    styles["Heading3"].fontName = bold_font
+    styles["Heading4"].fontName = bold_font
 
     story = []
-    
-    # Logo do PDF (Sempre light/padrão)
-    logo_path = "logo_light.png" if os.path.exists("logo_light.png") else "logo.png"
+
+    # PDF SEMPRE usa logo_light.png
+    logo_path = Path("logo_light.png")
+    if not logo_path.exists():
+        logo_path = Path("logo.png")
     
     header_row = []
     logo_display_width = 0
-    if os.path.exists(logo_path):
-        image_reader = ImageReader(logo_path)
+    if logo_path.exists():
+        image_reader = ImageReader(str(logo_path))
         img_width, img_height = image_reader.getSize()
-        ratio = 3.2 * cm / float(img_height)
+        max_height = 3.2 * cm
+        ratio = max_height / float(img_height)
         logo_display_width = img_width * ratio
-        header_row.append(Image(logo_path, width=logo_display_width, height=img_height * ratio))
+        logo = Image(str(logo_path), width=logo_display_width, height=img_height * ratio)
+        header_row.append(logo)
     else:
         header_row.append(Paragraph("", styles["BodyText"]))
 
-    header_row.append(Paragraph("Avaliação do Colaborador", title_style))
-    
+    header_title = Paragraph("Avaliação do Colaborador", title_style)
+    header_row.append(header_title)
+
     first_col_width = max(logo_display_width + 0.5 * cm, 3.5 * cm)
-    header_table = Table([header_row], colWidths=[first_col_width, max(doc.width - first_col_width, 8*cm)])
-    header_table.setStyle(TableStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("ALIGN", (1,0), (1,0), "CENTER")]))
+    second_col_width = max(doc.width - first_col_width, 8 * cm)
+    header_table = Table([header_row], colWidths=[first_col_width, second_col_width])
+    header_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("ALIGN", (0, 0), (0, 0), "LEFT"),
+        ("ALIGN", (1, 0), (1, 0), "CENTER"),
+        ("LEFTPADDING", (1, 0), (1, 0), 0),
+        ("RIGHTPADDING", (1, 0), (1, 0), 0)
+    ]))
     story.append(header_table)
     story.append(Paragraph(f"Gerado em {datetime.now().strftime('%d/%m/%Y %H:%M')}", small_style))
     story.append(Spacer(1, 12))
 
-    dados_filtrados = {k: v for k, v in dados.items() if k in colaboradores_ids} if colaboradores_ids else dados
-    dados_ordenados = sorted(dados_filtrados.items(), key=lambda x: x[1].get("nome", ""))
+    dados_filtrados = dados
+    if colaboradores_ids:
+        dados_filtrados = {k: v for k, v in dados.items() if k in colaboradores_ids}
 
+    dados_ordenados = sorted(dados_filtrados.items(), key=lambda x: x[1].get("nome", ""))
     for index, (id_col, dados_col) in enumerate(dados_ordenados, start=1):
-        story.append(Paragraph(f"Colaborador: {escape(dados_col.get('nome', ''))}", section_style))
-        
+        nome = dados_col.get("nome", "")
+        story.append(Paragraph(f"Colaborador: {escape(nome)}", section_style))
+
         info_data = [
             ["Avaliador", escape(str(dados_col.get("avaliador", "")))],
             ["Data", escape(str(dados_col.get("data", "")))],
             ["Total de Pontos", escape(str(dados_col.get("total_pontos", "")))],
             ["Classificação", escape(str(dados_col.get("classificacao", "")))]
         ]
-        info_table = Table(info_data, colWidths=[4.5*cm, 10.5*cm])
+
+        info_table = Table(info_data, colWidths=[4.5 * cm, 10.5 * cm])
         info_table.setStyle(TableStyle([
-            ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#F5F5F5")),
-            ("TEXTCOLOR", (0,0), (-1,-1), colors.HexColor("#000000")),
-            ("GRID", (0,0), (-1,-1), 0.5, colors.HexColor("#E0E0E0")),
-            ("FONTNAME", (0,0), (-1,-1), body_font)
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#F5F5F5")),
+            ("TEXTCOLOR", (0, 0), (-1, -1), colors.HexColor("#000000")),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#E0E0E0")),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("FONTNAME", (0, 0), (-1, -1), body_font)
         ]))
         story.append(info_table)
         story.append(Spacer(1, 10))
-        
-        # ... Restante do código PDF simplificado para brevidade, mantendo lógica original ...
+
         scores = dados_col.get("scores", {})
+        observacoes = dados_col.get("observacoes", {})
         if scores:
             story.append(Paragraph("Notas por critério", styles["Heading3"]))
             scores_rows = [["Critério", "Nota", "Observações"]]
-            for c, n in scores.items():
-                scores_rows.append([Paragraph(escape(str(c)), styles["BodyText"]), n, Paragraph(escape(str(dados_col.get('observacoes', {}).get(c, ''))), styles["BodyText"])])
-            scores_table = Table(scores_rows, colWidths=[4.5*cm, 2*cm, 10*cm])
-            scores_table.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), colors.HexColor("#FF6600")), ("TEXTCOLOR", (0,0), (-1,0), colors.HexColor("#FFFFFF")), ("GRID", (0,0), (-1,-1), 0.5, colors.HexColor("#E0E0E0"))]))
+            for criterio, nota in scores.items():
+                obs = observacoes.get(criterio, "")
+                scores_rows.append([
+                    Paragraph(escape(str(criterio)), styles["BodyText"]),
+                    Paragraph(escape(str(nota)), styles["BodyText"]),
+                    Paragraph(escape(str(obs)), styles["BodyText"])
+                ])
+
+            obs_col_width = max(doc.width - (4.5 * cm + 2 * cm), 7.5 * cm)
+            scores_table = Table(scores_rows, colWidths=[4.5 * cm, 2 * cm, obs_col_width])
+            scores_table.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#FF6600")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#FFFFFF")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#E0E0E0")),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("FONTNAME", (0, 0), (-1, -1), body_font)
+            ]))
             story.append(scores_table)
             story.append(Spacer(1, 10))
-            
-        # PDI e Assinaturas
+
+        opiniao = dados_col.get("opiniao", "")
+        if opiniao:
+            story.append(Paragraph("Opinião do colaborador", styles["Heading3"]))
+            story.append(Paragraph(escape(str(opiniao)), styles["BodyText"]))
+            story.append(Spacer(1, 10))
+
         story.append(Paragraph("Plano de Desenvolvimento Individual (PDI)", styles["Heading3"]))
-        pf = "<br/>".join([f"• {escape(str(p))}" for p in dados_col.get("pontos_fortes", []) if p]) or "—"
-        ga = "<br/>".join([f"• {escape(str(g))}" for g in dados_col.get("gargalos", []) if g]) or "—"
+
+        pontos_fortes = [p for p in dados_col.get("pontos_fortes", []) if p]
+        gargalos = [g for g in dados_col.get("gargalos", []) if g]
+        acoes_melhoria = dados_col.get("acoes_melhoria", [])
+
+        pf_texto = "<br/>".join([f"• {escape(str(p))}" for p in pontos_fortes]) if pontos_fortes else "—"
+        g_texto = "<br/>".join([f"• {escape(str(g))}" for g in gargalos]) if gargalos else "—"
+
+        acoes_texto = "—"
+        if acoes_melhoria:
+            linhas = []
+            for idx_acao, acao in enumerate(acoes_melhoria, start=1):
+                acao_texto = escape(str(acao.get("acao", "")))
+                prazo_texto = escape(str(acao.get("prazo", "")))
+                linhas.append(f"• Ação {idx_acao}: {acao_texto} | Como e Prazos: {prazo_texto}")
+            acoes_texto = "<br/>".join(linhas)
+
         story.append(Paragraph("Pontos Fortes", styles["Heading4"]))
-        story.append(Paragraph(pf, styles["BodyText"]))
+        story.append(Paragraph(pf_texto, styles["BodyText"]))
+        story.append(Spacer(1, 6))
         story.append(Paragraph("Gargalos", styles["Heading4"]))
-        story.append(Paragraph(ga, styles["BodyText"]))
-        
+        story.append(Paragraph(g_texto, styles["BodyText"]))
+        story.append(Spacer(1, 6))
+        story.append(Paragraph("Ações de Melhoria", styles["Heading4"]))
+        story.append(Paragraph(acoes_texto, styles["BodyText"]))
+
+        # Seção de assinaturas
         story.append(Spacer(1, 20))
-        ass_table = Table([["_"*40, "_"*40], ["Colaborador", "Avaliador"]], colWidths=[8*cm, 8*cm])
-        ass_table.setStyle(TableStyle([("ALIGN", (0,0), (-1,-1), "CENTER")]))
-        story.append(ass_table)
+        story.append(Paragraph("Assinaturas", styles["Heading3"]))
+        story.append(Spacer(1, 15))
+
+        assinatura_data = [
+            ["", ""],
+            ["_" * 50, "_" * 50],
+            [escape(nome), escape(dados_col.get("avaliador", ""))],
+            ["Colaborador", "Avaliador"]
+        ]
+
+        assinatura_table = Table(assinatura_data, colWidths=[7.5 * cm, 7.5 * cm])
+        assinatura_table.setStyle(TableStyle([
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("VALIGN", (0, 0), (-1, -1), "BOTTOM"),
+            ("FONTNAME", (0, 2), (-1, 3), body_font),
+            ("FONTSIZE", (0, 2), (-1, 2), 10),
+            ("FONTSIZE", (0, 3), (-1, 3), 9),
+            ("TEXTCOLOR", (0, 3), (-1, 3), colors.HexColor("#4c4c4c")),
+            ("TOPPADDING", (0, 1), (-1, 1), 0),
+            ("BOTTOMPADDING", (0, 1), (-1, 1), 2)
+        ]))
+        story.append(assinatura_table)
+        story.append(Spacer(1, 10))
         
-        if index < len(dados_ordenados): story.append(PageBreak())
+        data_avaliacao = dados_col.get("data", "")
+        story.append(Paragraph(f"Data da Avaliação: {escape(data_avaliacao)}", small_style))
+
+        if index < len(dados_ordenados):
+            story.append(PageBreak())
 
     doc.build(story)
     pdf_bytes = buffer.getvalue()
@@ -467,18 +674,25 @@ def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None):
     return pdf_bytes
 
 # -----------------------------------------------------------------------------
-# 4. LAYOUT E CABEÇALHO
+# 4. RENDERIZAÇÃO DO CABEÇALHO (MODIFICADO PARA CSS PURO)
 # -----------------------------------------------------------------------------
 
-# Seleção de arquivo de logo único (a inversão de cor é feita pelo CSS agora)
-_logo_file = "logo_light.png" if os.path.exists("logo_light.png") else "logo.png"
+# Título principal
+st.markdown("""
+<style>
+/* CSS Extra para o layout do cabeçalho */
+.header-wrapper {
+    /* As cores agora vêm das variáveis definidas no bloco CSS principal */
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+</style>
 
-# Renderização do Header usando HTML para controle preciso do CSS
-# Nota: Adicionamos a classe 'logo-img' na imagem para o CSS inverter a cor no modo Dark
-st.markdown(f"""
 <div class="header-wrapper">
     <div style="flex: 0 0 auto;">
-        <img src="app/static/{_logo_file}" class="logo-img" style="max-width: 150px; height: auto;" onerror="this.style.display='none'">
+        <img src="app/static/logo_light.png" class="logo-img" style="max-width: 180px; height: auto;" onerror="this.src='app/static/logo.png'; this.onerror=null;">
     </div>
     <div class="header-text" style="flex: 1;">
         <h1>SISTEMA DE AVALIAÇÃO E PDI</h1>
@@ -487,17 +701,14 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Caso a imagem no HTML falhe (caminho local vs deploy), usamos o fallback do Streamlit
-# mas escondemos visualmente se o HTML acima funcionou. 
-# Como backup visual simples:
-if not os.path.exists(_logo_file):
-    st.caption("⚠️ Logo não encontrado. Adicione 'logo_light.png' na pasta raiz.")
 
 # -----------------------------------------------------------------------------
-# 5. LÓGICA DO APP (SIDEBAR E PÁGINAS)
+# 5. LÓGICA DO APP (SIDEBAR E PÁGINAS - MANTIDO ORIGINAL)
 # -----------------------------------------------------------------------------
 
+# Sidebar para gerenciar colaboradores
 st.sidebar.title("GERENCIAMENTO")
+
 modo = st.sidebar.radio(
     "Selecione a ação:",
     ["Nova Avaliação", "Visualizar Colaboradores", "Relatório", "Feedbacks"]
@@ -509,16 +720,28 @@ if modo == "Nova Avaliação":
     st.markdown('<h2 class="section-header">FORMULÁRIO DE AVALIAÇÃO</h2>', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
+    
     with col1:
-        nome_colaborador = st.text_input("Nome do Colaborador", key="nome_col")
-        avaliador = st.text_input("Nome do Avaliador (Gestor)", key="avaliador")
+        nome_colaborador = st.text_input(
+            "Nome do Colaborador",
+            key="nome_col"
+        )
+        avaliador = st.text_input(
+            "Nome do Avaliador (Gestor)",
+            key="avaliador"
+        )
+    
     with col2:
-        data_avaliacao = st.date_input("Data da Avaliação", value=datetime.now())
+        data_avaliacao = st.date_input(
+            "Data da Avaliação",
+            value=datetime.now()
+        )
     
     st.divider()
     st.markdown('<h3 class="section-header">MATRIZ DE COMPETÊNCIAS</h3>', unsafe_allow_html=True)
     st.caption("Escala: 1=Insatisfatório, 2=Abaixo da Expectativa, 3=Atende, 4=Supera, 5=Excepcional")
     
+    # Critérios de avaliação
     criterios = {
         "Organização": "Manutenção do box e zelo com ferramentas",
         "Trabalho em Equipe": "Colaboração e clima organizacional",
@@ -536,13 +759,24 @@ if modo == "Nova Avaliação":
     
     for idx, (criterio, descricao) in enumerate(criterios.items()):
         col1, col2, col3 = st.columns([2, 1, 2])
+        
         with col1:
             st.caption(f"**{criterio}**")
             st.text(descricao)
+        
         with col2:
-            scores[criterio] = st.selectbox(label="Nota", options=[1, 2, 3, 4, 5], key=f"score_{idx}")
+            scores[criterio] = st.selectbox(
+                label="Nota",
+                options=[1, 2, 3, 4, 5],
+                key=f"score_{idx}"
+            )
+        
         with col3:
-            observacoes[criterio] = st.text_input("Observações", key=f"obs_{idx}", placeholder="Evidências/Justificativa")
+            observacoes[criterio] = st.text_input(
+                "Observações",
+                key=f"obs_{idx}",
+                placeholder="Evidências/Justificativa"
+            )
     
     total_pontos = calcular_total(scores)
     classificacao, cor = classificar_performance(total_pontos)
@@ -552,124 +786,565 @@ if modo == "Nova Avaliação":
     with col1:
         st.markdown(f'<h3 class="section-header">Total de Pontos: {total_pontos}/45</h3>', unsafe_allow_html=True)
     with col2:
-        classe_css = "status-high" if "ALTO" in classificacao else "status-medium" if "MANUTENÇÃO" in classificacao else "status-low"
-        st.markdown(f'<div class="{classe_css}">{classificacao}</div>', unsafe_allow_html=True)
+        if "ALTO" in classificacao:
+            st.markdown(f'<div class="status-high">{classificacao}</div>', unsafe_allow_html=True)
+        elif "MANUTENÇÃO" in classificacao:
+            st.markdown(f'<div class="status-medium">{classificacao}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f'<div class="status-low">{classificacao}</div>', unsafe_allow_html=True)
     
     st.divider()
+    st.markdown('<h3 class="section-header">OPINIÃO DO COLABORADOR</h3>', unsafe_allow_html=True)
+    opiniao_colaborador = st.text_area(
+        "Opinião sobre riscos ocupacionais e problemas no processo",
+        key="opiniao_colaborador",
+        height=120,
+        placeholder="Relate riscos observados, gargalos do processo e sugestões de melhoria"
+    )
+
+    st.divider()
     st.markdown('<h3 class="section-header">PLANO DE DESENVOLVIMENTO INDIVIDUAL (PDI)</h3>', unsafe_allow_html=True)
+    
     col1, col2 = st.columns(2)
+    
     with col1:
-        st.markdown('<h4 class="subtitle-green">Pontos Fortes (Continuar)</h4>', unsafe_allow_html=True)
+        st.markdown('<h4 class="subtitle-green">O que CONTINUAR fazendo (Pontos Fortes)</h4>', unsafe_allow_html=True)
         ponto_forte_1 = st.text_area("Ponto Forte 1", key="pf1", height=80)
         ponto_forte_2 = st.text_area("Ponto Forte 2", key="pf2", height=80)
+    
     with col2:
-        st.markdown('<h4 class="subtitle-red">Gargalos (Parar/Melhorar)</h4>', unsafe_allow_html=True)
+        st.markdown('<h4 class="subtitle-red">O que PARAR de fazer (Gargalos)</h4>', unsafe_allow_html=True)
         gargalo_1 = st.text_area("Gargalo 1", key="g1", height=80)
         gargalo_2 = st.text_area("Gargalo 2", key="g2", height=80)
     
-    st.markdown('<h4 class="subtitle-blue">Ações de Melhoria (Começar)</h4>', unsafe_allow_html=True)
-    num_acoes = st.number_input("Quantas ações?", min_value=1, max_value=5, value=3)
+    st.markdown('<h4 class="subtitle-blue">O que COMEÇAR a desenvolver (Ações de Melhoria)</h4>', unsafe_allow_html=True)
+    
+    num_acoes = st.number_input("Quantas ações de melhoria?", min_value=1, max_value=5, value=3)
+    
     acoes_melhoria = []
     for i in range(num_acoes):
-        c1, c2 = st.columns(2)
-        ac = c1.text_area(f"Ação {i+1}", key=f"acao_{i}", height=80)
-        pz = c2.text_input(f"Como e Prazos {i+1}?", key=f"prazo_{i}")
-        if ac: acoes_melhoria.append({"acao": ac, "prazo": pz})
-
-    st.divider()
-    st.markdown('<h3 class="section-header">OPINIÃO DO COLABORADOR</h3>', unsafe_allow_html=True)
-    opiniao_colaborador = st.text_area("Opinião", key="opiniao_colaborador", height=100)
+        col1, col2 = st.columns(2)
+        with col1:
+            acao = st.text_area(f"Ação de Melhoria {i+1}", key=f"acao_{i}", height=80)
+        with col2:
+            prazo = st.text_input(f"Como e Prazos? {i+1}", key=f"prazo_{i}")
+        if acao:
+            acoes_melhoria.append({"acao": acao, "prazo": prazo})
     
+    # Botão para salvar
     if st.button("SALVAR AVALIAÇÃO", use_container_width=True):
         if nome_colaborador.strip() and avaliador.strip():
             id_colaborador = f"{nome_colaborador}_{data_avaliacao}"
-            novo_dado = {
-                id_colaborador: {
-                    "nome": nome_colaborador, "avaliador": avaliador, "data": str(data_avaliacao),
-                    "scores": scores, "observacoes": observacoes, "opiniao": opiniao_colaborador,
-                    "total_pontos": total_pontos, "classificacao": classificacao,
-                    "pontos_fortes": [ponto_forte_1, ponto_forte_2],
-                    "gargalos": [gargalo_1, gargalo_2],
-                    "acoes_melhoria": acoes_melhoria,
-                    "timestamp": datetime.now().isoformat()
-                }
+            
+            dados[id_colaborador] = {
+                "nome": nome_colaborador,
+                "avaliador": avaliador,
+                "data": str(data_avaliacao),
+                "scores": scores,
+                "observacoes": observacoes,
+                "opiniao": opiniao_colaborador,
+                "total_pontos": total_pontos,
+                "classificacao": classificacao,
+                "pontos_fortes": [ponto_forte_1, ponto_forte_2],
+                "gargalos": [gargalo_1, gargalo_2],
+                "acoes_melhoria": acoes_melhoria,
+                "timestamp": datetime.now().isoformat()
             }
-            salvar_dados(novo_dado)
-            st.success(f"Avaliação de {nome_colaborador} salva!")
+            
+            salvar_dados(dados)
+            st.success(f"Avaliação de {nome_colaborador} salva com sucesso!")
             st.balloons()
         else:
-            st.error("Preencha Nome e Avaliador")
+            st.error("Por favor, preencha Nome do Colaborador e Avaliador")
 
 elif modo == "Visualizar Colaboradores":
     st.markdown('<h2 class="section-header">COLABORADORES REGISTRADOS</h2>', unsafe_allow_html=True)
+    
     if not dados:
-        st.info("Nenhuma avaliação registrada.")
+        st.info("Nenhuma avaliação registrada ainda.")
     else:
-        dados_lista = [{"Nome": v["nome"], "Total": v["total_pontos"], "ID": k} for k, v in dados.items()]
-        colaborador_sel = st.selectbox("Selecione:", [d["Nome"] for d in dados_lista])
-        id_sel = next(d["ID"] for d in dados_lista if d["Nome"] == colaborador_sel)
-        dado_col = dados[id_sel]
+        # Criar DataFrame com os dados
+        dados_lista = []
+        for id_col, dados_col in dados.items():
+            dados_lista.append({
+                "Nome": dados_col["nome"],
+                "Avaliador": dados_col["avaliador"],
+                "Data": dados_col["data"],
+                "Total Pontos": dados_col["total_pontos"],
+                "Classificação": dados_col["classificacao"],
+                "ID": id_col
+            })
         
-        c1, c2, c3 = st.columns([3, 1, 1])
-        c1.markdown(f'<h3 class="section-header">{colaborador_sel}</h3>', unsafe_allow_html=True)
-        if c2.button("✏️ EDITAR", use_container_width=True): st.session_state.editando = id_sel
-        if c3.button("🗑️ DELETAR", use_container_width=True):
-            del dados[id_sel]
-            salvar_dados(dados) # Nota: salvar_dados no código original era append only, idealmente precisa de um metodo update completo ou delete
-            st.warning("Função de deleção requer implementação no backend (gspread delete_row).")
-            st.rerun()
-
-        # Visualização rápida
-        cm1, cm2, cm3 = st.columns(3)
-        cm1.metric("Total", dado_col["total_pontos"])
-        cm2.metric("Classificação", dado_col["classificacao"])
-        cm3.metric("Data", dado_col["data"])
+        df = pd.DataFrame(dados_lista)
         
-        # Gráfico Radar
-        fig = go.Figure(data=go.Scatterpolar(r=list(dado_col["scores"].values()), theta=list(dado_col["scores"].keys()), fill='toself'))
-        fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 5])), height=300, margin=dict(t=20, b=20, l=20, r=20))
-        st.plotly_chart(fig, use_container_width=True)
+        # Seletor de colaborador
+        colaborador_selecionado = st.selectbox(
+            "Selecione um colaborador para visualizar/editar:",
+            [d["Nome"] for d in dados_lista]
+        )
+        
+        # Filtrar dados do colaborador selecionado
+        id_selecionado = next(d["ID"] for d in dados_lista if d["Nome"] == colaborador_selecionado)
+        dados_colaborador = dados[id_selecionado]
+        
+        col1, col2, col3 = st.columns([3, 1, 1])
+        
+        with col1:
+            st.markdown(f'<h3 class="section-header">AVALIAÇÃO DE {colaborador_selecionado.upper()}</h3>', unsafe_allow_html=True)
+        
+        with col2:
+            modo_editar = st.button("✏️ EDITAR", key="btn_edit", use_container_width=True)
+        
+        with col3:
+            if st.button("🗑️ DELETAR", key="btn_delete", use_container_width=True):
+                del dados[id_selecionado]
+                salvar_dados(dados)
+                st.success(f"{colaborador_selecionado} foi deletado!")
+                st.rerun()
+        
+        if modo_editar:
+            st.session_state.editando = id_selecionado
+        
+        # Informações básicas
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Avaliador", dados_colaborador["avaliador"])
+        with col2:
+            st.metric("Data", dados_colaborador["data"])
+        with col3:
+            classificacao_texto = dados_colaborador["classificacao"]
+            st.metric("Classificação", classificacao_texto)
+        
+        # Scores
+        st.markdown('<h3 class="section-header">NOTAS POR CRITÉRIO</h3>', unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Tabela de scores
+            scores_data = []
+            for criterio, score in dados_colaborador["scores"].items():
+                obs = dados_colaborador["observacoes"].get(criterio, "")
+                scores_data.append({
+                    "Critério": criterio,
+                    "Nota": score,
+                    "Observações": obs
+                })
+            
+            df_scores = pd.DataFrame(scores_data)
+            st.dataframe(df_scores, use_container_width=True, hide_index=True)
+        
+        with col2:
+            # Gráfico de radar
+            fig = go.Figure(data=go.Scatterpolar(
+                r=list(dados_colaborador["scores"].values()),
+                theta=list(dados_colaborador["scores"].keys()),
+                fill='toself',
+                name='Score'
+            ))
+            
+            fig.update_layout(
+                polar=dict(radialaxis=dict(visible=True, range=[0, 5])),
+                showlegend=False,
+                height=400
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+        
+        # PDI
+        st.markdown('<h3 class="section-header">PLANO DE DESENVOLVIMENTO INDIVIDUAL</h3>', unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown('<h4 class="subtitle-dark">Pontos Fortes</h4>', unsafe_allow_html=True)
+            for i, ponto in enumerate(dados_colaborador["pontos_fortes"], 1):
+                if ponto:
+                    st.write(f"• {ponto}")
+        
+        with col2:
+            st.markdown('<h4 class="subtitle-dark">Gargalos</h4>', unsafe_allow_html=True)
+            for i, gargalo in enumerate(dados_colaborador["gargalos"], 1):
+                if gargalo:
+                    st.write(f"• {gargalo}")
+        
+        st.markdown('<h4 class="subtitle-dark">Ações de Melhoria</h4>', unsafe_allow_html=True)
+        for i, acao in enumerate(dados_colaborador["acoes_melhoria"], 1):
+            with st.expander(f"Ação {i}: {acao['acao'][:50]}..."):
+                st.write(f"**Ação:** {acao['acao']}")
+                st.write(f"**Como e Prazos:** {acao['prazo']}")
 
-        if 'editando' in st.session_state and st.session_state.editando == id_sel:
-            st.info("Modo de Edição Ativo")
-            # ... (Lógica de edição simplificada para caber no bloco, mantendo a estrutura original) ...
-            # Para brevidade, recomendo manter a lógica de edição do seu código original aqui se for crítica,
-            # mas o foco foi corrigir o CSS.
+        # Opinião do colaborador
+        st.markdown('<h3 class="section-header">OPINIÃO DO COLABORADOR</h3>', unsafe_allow_html=True)
+        opiniao = dados_colaborador.get("opiniao", "")
+        if opiniao:
+            st.write(opiniao)
+        else:
+            st.info("Sem opinião registrada.")
+
+        # Modo de edição
+        if 'editando' in st.session_state and st.session_state.editando == id_selecionado:
+            st.divider()
+            st.markdown('<h2 class="section-header">MODO DE EDIÇÃO</h2>', unsafe_allow_html=True)
+            
+            st.info("Edite os campos abaixo e clique em 'SALVAR ALTERAÇÕES' para atualizar a avaliação.")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                avaliador_edit = st.text_input(
+                    "Avaliador",
+                    value=dados_colaborador.get("avaliador", ""),
+                    key="edit_avaliador"
+                )
+            with col2:
+                data_edit = st.date_input(
+                    "Data",
+                    value=datetime.strptime(dados_colaborador.get("data", "2000-01-01"), "%Y-%m-%d"),
+                    key="edit_data"
+                )
+            
+            st.markdown('<h3 class="section-header">EDITAR MATRIZ DE COMPETÊNCIAS</h3>', unsafe_allow_html=True)
+            st.caption("Escala: 1=Insatisfatório, 2=Abaixo da Expectativa, 3=Atende, 4=Supera, 5=Excepcional")
+            
+            scores_edit = {}
+            observacoes_edit = {}
+            
+            for idx, criterio in enumerate(dados_colaborador["scores"].keys()):
+                col1, col2, col3 = st.columns([2, 1, 2])
+                
+                with col1:
+                    st.caption(f"**{criterio}**")
+                
+                with col2:
+                    scores_edit[criterio] = st.selectbox(
+                        label="Nota",
+                        options=[1, 2, 3, 4, 5],
+                        index=int(dados_colaborador["scores"][criterio]) - 1,
+                        key=f"edit_score_{idx}"
+                    )
+                
+                with col3:
+                    observacoes_edit[criterio] = st.text_input(
+                        "Observações",
+                        value=dados_colaborador["observacoes"].get(criterio, ""),
+                        key=f"edit_obs_{idx}"
+                    )
+            
+            total_pontos_edit = calcular_total(scores_edit)
+            classificacao_edit, _ = classificar_performance(total_pontos_edit)
+            
+            st.divider()
+            st.markdown(f'<h3 class="section-header">Total de Pontos: {total_pontos_edit}/45</h3>', unsafe_allow_html=True)
+            
+            st.divider()
+            st.markdown('<h3 class="section-header">EDITAR PDI</h3>', unsafe_allow_html=True)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown('<h4 style="color: #00796B; margin-top: 0;">Pontos Fortes</h4>', unsafe_allow_html=True)
+                pf1_edit = st.text_area("Ponto Forte 1", 
+                    value=dados_colaborador["pontos_fortes"][0] if len(dados_colaborador["pontos_fortes"]) > 0 else "",
+                    key="edit_pf1", height=80)
+                pf2_edit = st.text_area("Ponto Forte 2",
+                    value=dados_colaborador["pontos_fortes"][1] if len(dados_colaborador["pontos_fortes"]) > 1 else "",
+                    key="edit_pf2", height=80)
+            
+            with col2:
+                st.markdown('<h4 style="color: #C62828; margin-top: 0;">Gargalos</h4>', unsafe_allow_html=True)
+                g1_edit = st.text_area("Gargalo 1",
+                    value=dados_colaborador["gargalos"][0] if len(dados_colaborador["gargalos"]) > 0 else "",
+                    key="edit_g1", height=80)
+                g2_edit = st.text_area("Gargalo 2",
+                    value=dados_colaborador["gargalos"][1] if len(dados_colaborador["gargalos"]) > 1 else "",
+                    key="edit_g2", height=80)
+            
+            st.markdown('<h4 style="color: #1976D2; margin-top: 20px;">Ações de Melhoria</h4>', unsafe_allow_html=True)
+            
+            num_acoes_edit = st.number_input("Quantas ações de melhoria?", 
+                min_value=1, max_value=5, 
+                value=len(dados_colaborador["acoes_melhoria"]) or 3,
+                key="edit_num_acoes")
+            
+            acoes_melhoria_edit = []
+            for i in range(num_acoes_edit):
+                col1, col2 = st.columns(2)
+                with col1:
+                    acao_valor = ""
+                    if i < len(dados_colaborador["acoes_melhoria"]):
+                        acao_valor = dados_colaborador["acoes_melhoria"][i].get("acao", "")
+                    acao = st.text_area(f"Ação de Melhoria {i+1}", value=acao_valor, key=f"edit_acao_{i}", height=80)
+                with col2:
+                    prazo_valor = ""
+                    if i < len(dados_colaborador["acoes_melhoria"]):
+                        prazo_valor = dados_colaborador["acoes_melhoria"][i].get("prazo", "")
+                    prazo = st.text_input(f"Como e Prazos? {i+1}", value=prazo_valor, key=f"edit_prazo_{i}")
+                if acao:
+                    acoes_melhoria_edit.append({"acao": acao, "prazo": prazo})
+            
+            st.divider()
+            st.markdown('<h3 class="section-header">EDITAR OPINIÃO DO COLABORADOR</h3>', unsafe_allow_html=True)
+            opiniao_edit = st.text_area(
+                "Opinião sobre riscos ocupacionais e problemas no processo",
+                value=dados_colaborador.get("opiniao", ""),
+                key="edit_opiniao",
+                height=120,
+                placeholder="Relate riscos observados, gargalos do processo e sugestões de melhoria"
+            )
+            
+            st.divider()
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if st.button("SALVAR ALTERAÇÕES", use_container_width=True, key="btn_save_edit"):
+                    dados_atualizados = {
+                        "nome": dados_colaborador["nome"],
+                        "avaliador": avaliador_edit,
+                        "data": str(data_edit),
+                        "scores": scores_edit,
+                        "observacoes": observacoes_edit,
+                        "opiniao": opiniao_edit,
+                        "total_pontos": total_pontos_edit,
+                        "classificacao": classificacao_edit,
+                        "pontos_fortes": [pf1_edit, pf2_edit],
+                        "gargalos": [g1_edit, g2_edit],
+                        "acoes_melhoria": acoes_melhoria_edit,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                    
+                    if atualizar_avaliacao(id_selecionado, dados_atualizados):
+                        st.success("Avaliação atualizada com sucesso!")
+                        del st.session_state.editando
+                        st.rerun()
+                    else:
+                        st.error("Erro ao atualizar avaliação!")
+            
+            with col2:
+                if st.button("CANCELAR", use_container_width=True, key="btn_cancel_edit"):
+                    del st.session_state.editando
+                    st.rerun()
 
 elif modo == "Relatório":
-    st.markdown('<h2 class="section-header">RELATÓRIO GERAL</h2>', unsafe_allow_html=True)
-    if dados:
-        sel = st.selectbox("Imprimir Colaborador", ["Todos"] + sorted([d["nome"] for d in dados.values()]))
-        ids = [k for k,v in dados.items() if v["nome"] == sel] if sel != "Todos" else list(dados.keys())
+    st.markdown('<h2 class="section-header">RELATÓRIO GERAL DE PERFORMANCE</h2>', unsafe_allow_html=True)
+    
+    if not dados:
+        st.info("Nenhuma avaliação registrada ainda.")
+    else:
+        if not (Path("fonts/Montserrat-Regular.ttf").exists() and Path("fonts/Montserrat-Bold.ttf").exists()):
+            st.warning("Fonte Montserrat não encontrada em fonts/. Para manter a identidade visual, adicione Montserrat-Regular.ttf e Montserrat-Bold.ttf nessa pasta.")
+
+        st.markdown('<h4 class="section-header">EXPORTAÇÃO DO RELATÓRIO COMPLETO</h4>', unsafe_allow_html=True)
+
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            opcoes_colaboradores = [(id_col, dados_col["nome"]) for id_col, dados_col in dados.items()]
+            opcoes_colaboradores = sorted(opcoes_colaboradores, key=lambda x: x[1])
+            nomes_exibicao = ["Todos"] + [nome for _, nome in opcoes_colaboradores]
+            selecao = st.selectbox(
+                "Selecione o colaborador para imprimir",
+                nomes_exibicao
+            )
+
+        with col2:
+            st.markdown("<div style='height: 27px;'></div>", unsafe_allow_html=True)
+            if selecao == "Todos":
+                ids_selecionados = [id_col for id_col, _ in opcoes_colaboradores]
+            else:
+                ids_selecionados = [id_col for id_col, nome in opcoes_colaboradores if nome == selecao]
+
+            pdf_bytes = gerar_pdf_relatorio_pdi(dados, colaboradores_ids=ids_selecionados, theme_base="light")
+            nome_arquivo = (
+                f"avaliacao_colaborador_{selecao.lower().replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
+                if selecao != "Todos"
+                else f"avaliacao_colaboradores_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
+            )
+
+            st.download_button(
+                label="📄 Baixar PDF",
+                data=pdf_bytes,
+                file_name=nome_arquivo,
+                mime="application/pdf",
+                use_container_width=True
+            )
+
+        st.divider()
+
+        # Preparar dados para visualização
+        nomes = []
+        totais = []
+        classificacoes = []
+        cores_map = {"ALTO DESEMPENHO": "#4CAF50", "MANUTENÇÃO": "#FF6600", "RISCO": "#D32F2F"}
+        cores = []
         
-        pdf = gerar_pdf_relatorio_pdi(dados, ids)
-        st.download_button("📄 Baixar PDF", data=pdf, file_name=f"relatorio_{datetime.now().strftime('%H%M')}.pdf", mime="application/pdf")
+        for id_col, dados_col in dados.items():
+            nomes.append(dados_col["nome"])
+            totais.append(dados_col["total_pontos"])
+            classificacao = dados_col["classificacao"]
+            classificacoes.append(classificacao)
+            cores.append(cores_map.get(classificacao, "#FF6600"))
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("Total de Colaboradores", len(dados))
+        with col2:
+            st.metric("Média de Pontos", f"{sum(totais) / len(totais):.1f}/45")
+        with col3:
+            alto_desempenho = sum(1 for c in classificacoes if "ALTO" in c)
+            st.metric("Alto Desempenho", alto_desempenho, delta="Excelente")
         
         st.divider()
-        # Gráficos Gerais
-        nomes = [d["nome"] for d in dados.values()]
-        pontos = [d["total_pontos"] for d in dados.values()]
-        fig = px.bar(x=nomes, y=pontos, color=pontos, title="Ranking de Pontuação")
-        st.plotly_chart(fig, use_container_width=True)
+        
+        # Gráfico de distribuição de scores
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown('<h4 style="color: #000000; font-weight: 700;">DISTRIBUIÇÃO DE PONTUAÇÕES</h4>', unsafe_allow_html=True)
+            
+            fig1 = px.bar(
+                x=nomes,
+                y=totais,
+                color=totais,
+                color_continuous_scale=["#D32F2F", "#FF6600", "#4CAF50"],
+                labels={"y": "Pontos", "x": "Colaborador"},
+                height=400
+            )
+            fig1.update_layout(showlegend=False)
+            st.plotly_chart(fig1, use_container_width=True)
+        
+        with col2:
+            st.markdown('<h4 style="color: #D32F2F;">CURVA DE VITALIDADE (DISTRIBUIÇÃO NORMAL)</h4>', unsafe_allow_html=True)
+            
+            # Criar histograma dos scores
+            fig2 = px.histogram(
+                x=totais,
+                nbins=10,
+                labels={"x": "Pontos", "count": "Quantidade"},
+                color_discrete_sequence=["#1976D2"],
+                height=400
+            )
+            
+            # Adicionar linhas de referência
+            fig2.add_vline(x=20, line_dash="dash", line_color="#C62828", annotation_text="Risco")
+            fig2.add_vline(x=21, line_dash="dash", line_color="#E65100", annotation_text="Limite Manutenção")
+            fig2.add_vline(x=40, line_dash="dash", line_color="#00796B", annotation_text="Alto Desempenho")
+            
+            st.plotly_chart(fig2, use_container_width=True)
+        
+        st.divider()
+        
+        # Tabela resumida
+        st.markdown('<h3 class="section-header">RESUMO DE TODOS OS COLABORADORES</h3>', unsafe_allow_html=True)
+        
+        resumo_data = []
+        for id_col, dados_col in dados.items():
+            resumo_data.append({
+                "Nome": dados_col["nome"],
+                "Avaliador": dados_col["avaliador"],
+                "Data": dados_col["data"],
+                "Total Pontos": dados_col["total_pontos"],
+                "Classificação": dados_col["classificacao"]
+            })
+        
+        df_resumo = pd.DataFrame(resumo_data).sort_values("Total Pontos", ascending=False)
+        st.dataframe(df_resumo, use_container_width=True, hide_index=True)
+        
+        st.divider()
+        
+        # Análise por critério
+        st.markdown('<h3 class="section-header">ANÁLISE POR CRITÉRIO</h3>', unsafe_allow_html=True)
+        
+        criterios_medias = {}
+        for criterio in ["Organização", "Trabalho em Equipe", "Comunicação e Regras",
+                "Segurança e EPIs", "Conduta e Respeito",
+                "Eficiência Técnica", "Qualidade (Retorno)", "Adesão aos Processos",
+                "Capacitação"]:
+            notas = []
+            for id_col, dados_col in dados.items():
+                if criterio in dados_col["scores"]:
+                    notas.append(dados_col["scores"][criterio])
+            if notas:
+                criterios_medias[criterio] = sum(notas) / len(notas)
+        
+        fig3 = px.bar(
+            x=list(criterios_medias.keys()),
+            y=list(criterios_medias.values()),
+            labels={"x": "Critério", "y": "Média de Notas"},
+            color_discrete_sequence=["#FF6600"],
+            height=400
+        )
+        st.plotly_chart(fig3, use_container_width=True)
 
 elif modo == "Feedbacks":
-    st.markdown('<h2 class="section-header">FEEDBACKS</h2>', unsafe_allow_html=True)
-    if dados:
-        c1, c2 = st.columns(2)
-        nome_f = c1.selectbox("Colaborador", sorted({d["nome"] for d in dados.values()}))
-        motivo = c2.text_input("Motivo")
-        texto = st.text_area("Feedback")
-        if st.button("Salvar Feedback"):
-            salvar_feedback(nome_f, motivo, texto)
-            st.success("Salvo!")
-        
-        st.divider()
-        st.dataframe(pd.DataFrame(carregar_feedbacks()), use_container_width=True, hide_index=True)
+    st.markdown('<h2 class="section-header">FEEDBACKS SOB DEMANDA</h2>', unsafe_allow_html=True)
 
+    if not dados:
+        st.info("Nenhum colaborador registrado ainda.")
+    else:
+        feedbacks = carregar_feedbacks()
+
+        colaboradores = sorted({d["nome"] for d in dados.values()})
+        col1, col2 = st.columns(2)
+
+        with col1:
+            colaborador_feedback = st.selectbox(
+                "Selecione o colaborador",
+                colaboradores
+            )
+        with col2:
+            motivo_feedback = st.text_input(
+                "Motivo do feedback",
+                placeholder="Ex.: Segurança, processo, conduta, desempenho"
+            )
+
+        feedback_texto = st.text_area(
+            "Feedback (direcionamento)",
+            height=120,
+            placeholder="Descreva o direcionamento e expectativas"
+        )
+
+        if st.button("SALVAR FEEDBACK", use_container_width=True):
+            if colaborador_feedback and motivo_feedback.strip() and feedback_texto.strip():
+                if salvar_feedback(colaborador_feedback, motivo_feedback, feedback_texto):
+                    st.success("Feedback salvo com sucesso!")
+                    st.rerun()
+            else:
+                st.error("Preencha colaborador, motivo e feedback.")
+
+        st.divider()
+        st.markdown('<h3 class="section-header">HISTÓRICO DE FEEDBACKS</h3>', unsafe_allow_html=True)
+
+        filtro_nome = st.selectbox(
+            "Filtrar por colaborador",
+            ["Todos"] + colaboradores
+        )
+
+        feedbacks_filtrados = [
+            f for f in feedbacks
+            if filtro_nome == "Todos" or f["nome"] == filtro_nome
+        ]
+
+        if not feedbacks_filtrados:
+            st.info("Nenhum feedback registrado para o filtro selecionado.")
+        else:
+            df_feedbacks = pd.DataFrame([
+                {
+                    "Nome": f["nome"],
+                    "Data/Hora": f["datahora"],
+                    "Motivo": f["motivo"],
+                    "Feedback": f["feedback"]
+                }
+                for f in feedbacks_filtrados
+            ]).sort_values("Data/Hora", ascending=False)
+
+            st.dataframe(df_feedbacks, use_container_width=True, hide_index=True)
+
+# Footer
 st.divider()
 st.markdown("""
-<div style="text-align: center; color: var(--text-secondary); margin-top: 30px; font-family: 'Montserrat', sans-serif;">
-    <p style="margin: 5px 0; font-weight: 700;">SATTE ALAM MOTORS</p>
-    <p style="font-size: 0.8rem;">Sistema de Avaliação e PDI v2.1 (Dark Mode Fix)</p>
+<div style="text-align: center; color: #4c4c4c; margin-top: 30px; font-family: 'Montserrat', sans-serif;">
+    <p style="margin: 5px 0; font-weight: 700; font-size: 1.1rem;">SATTE ALAM MOTORS</p>
+    <p style="margin: 5px 0; font-size: 0.9rem; color: #000000;">Todos os dados são salvos automaticamente no Google Sheets</p>
+    <p style="margin: 5px 0; font-size: 0.85rem; color: #4c4c4c;">Sistema de Avaliação e PDI v2.0 | Desenvolvido com Streamlit</p>
 </div>
 """, unsafe_allow_html=True)
