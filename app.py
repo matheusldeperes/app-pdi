@@ -7,8 +7,15 @@ import plotly.graph_objects as go
 import plotly.express as px
 from string import Template
 from pathlib import Path
+from io import BytesIO
+from xml.sax.saxutils import escape
 import gspread
 from google.oauth2.service_account import Credentials
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 
 # Configuração da página
 st.set_page_config(
@@ -301,6 +308,130 @@ def classificar_performance(total_pontos):
         return "MANUTENÇÃO", "#E65100"
     else:
         return "RISCO", "#C62828"
+
+def gerar_pdf_relatorio_pdi(dados):
+    """Gera um PDF com todos os dados, pontuações e observações do PDI de cada colaborador."""
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=2 * cm,
+        rightMargin=2 * cm,
+        topMargin=2 * cm,
+        bottomMargin=2 * cm
+    )
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        "TitleCustom",
+        parent=styles["Heading1"],
+        alignment=1,
+        textColor=colors.HexColor("#000000")
+    )
+    section_style = ParagraphStyle(
+        "SectionCustom",
+        parent=styles["Heading2"],
+        textColor=colors.HexColor("#FF6600")
+    )
+    small_style = ParagraphStyle(
+        "SmallCustom",
+        parent=styles["BodyText"],
+        fontSize=9,
+        leading=11
+    )
+
+    story = []
+    story.append(Paragraph("Relatório completo de PDI", title_style))
+    story.append(Paragraph(f"Gerado em {datetime.now().strftime('%d/%m/%Y %H:%M')}", small_style))
+    story.append(Spacer(1, 12))
+
+    dados_ordenados = sorted(dados.items(), key=lambda x: x[1].get("nome", ""))
+    for index, (id_col, dados_col) in enumerate(dados_ordenados, start=1):
+        nome = dados_col.get("nome", "")
+        story.append(Paragraph(f"Colaborador: {escape(nome)}", section_style))
+
+        info_data = [
+            ["Avaliador", escape(str(dados_col.get("avaliador", "")))],
+            ["Data", escape(str(dados_col.get("data", "")))],
+            ["Total de Pontos", escape(str(dados_col.get("total_pontos", "")))],
+            ["Classificação", escape(str(dados_col.get("classificacao", "")))]
+        ]
+
+        info_table = Table(info_data, colWidths=[4.5 * cm, 10.5 * cm])
+        info_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#F5F5F5")),
+            ("TEXTCOLOR", (0, 0), (-1, -1), colors.HexColor("#000000")),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#E0E0E0")),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("FONTNAME", (0, 0), (-1, -1), "Helvetica")
+        ]))
+        story.append(info_table)
+        story.append(Spacer(1, 10))
+
+        scores = dados_col.get("scores", {})
+        observacoes = dados_col.get("observacoes", {})
+        if scores:
+            story.append(Paragraph("Notas por critério", styles["Heading3"]))
+            scores_rows = [["Critério", "Nota", "Observações"]]
+            for criterio, nota in scores.items():
+                obs = observacoes.get(criterio, "")
+                scores_rows.append([
+                    escape(str(criterio)),
+                    escape(str(nota)),
+                    escape(str(obs))
+                ])
+
+            scores_table = Table(scores_rows, colWidths=[5.5 * cm, 2 * cm, 7.5 * cm])
+            scores_table.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#FF6600")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#FFFFFF")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#E0E0E0")),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("FONTNAME", (0, 0), (-1, -1), "Helvetica")
+            ]))
+            story.append(scores_table)
+            story.append(Spacer(1, 10))
+
+        opiniao = dados_col.get("opiniao", "")
+        if opiniao:
+            story.append(Paragraph("Opinião do colaborador", styles["Heading3"]))
+            story.append(Paragraph(escape(str(opiniao)), styles["BodyText"]))
+            story.append(Spacer(1, 10))
+
+        story.append(Paragraph("Plano de Desenvolvimento Individual (PDI)", styles["Heading3"]))
+
+        pontos_fortes = [p for p in dados_col.get("pontos_fortes", []) if p]
+        gargalos = [g for g in dados_col.get("gargalos", []) if g]
+        acoes_melhoria = dados_col.get("acoes_melhoria", [])
+
+        pf_texto = "<br/>".join([f"• {escape(str(p))}" for p in pontos_fortes]) if pontos_fortes else "—"
+        g_texto = "<br/>".join([f"• {escape(str(g))}" for g in gargalos]) if gargalos else "—"
+
+        acoes_texto = "—"
+        if acoes_melhoria:
+            linhas = []
+            for idx_acao, acao in enumerate(acoes_melhoria, start=1):
+                acao_texto = escape(str(acao.get("acao", "")))
+                prazo_texto = escape(str(acao.get("prazo", "")))
+                linhas.append(f"• Ação {idx_acao}: {acao_texto} | Como e Prazos: {prazo_texto}")
+            acoes_texto = "<br/>".join(linhas)
+
+        story.append(Paragraph("Pontos Fortes", styles["Heading4"]))
+        story.append(Paragraph(pf_texto, styles["BodyText"]))
+        story.append(Spacer(1, 6))
+        story.append(Paragraph("Gargalos", styles["Heading4"]))
+        story.append(Paragraph(g_texto, styles["BodyText"]))
+        story.append(Spacer(1, 6))
+        story.append(Paragraph("Ações de Melhoria", styles["Heading4"]))
+        story.append(Paragraph(acoes_texto, styles["BodyText"]))
+
+        if index < len(dados_ordenados):
+            story.append(PageBreak())
+
+    doc.build(story)
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes
 
 _css_base = """
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -1021,6 +1152,18 @@ elif modo == "Relatório":
     if not dados:
         st.info("Nenhuma avaliação registrada ainda.")
     else:
+        st.markdown('<h4 class="section-header">EXPORTAÇÃO DO RELATÓRIO COMPLETO</h4>', unsafe_allow_html=True)
+        pdf_bytes = gerar_pdf_relatorio_pdi(dados)
+        st.download_button(
+            label="📄 Baixar PDF completo do PDI",
+            data=pdf_bytes,
+            file_name=f"relatorio_pdi_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
+
+        st.divider()
+
         # Preparar dados para visualização
         nomes = []
         totais = []
