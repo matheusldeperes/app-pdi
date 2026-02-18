@@ -20,150 +20,73 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-# -----------------------------------------------------------------------------
-# 1. CONFIGURAÇÃO DA PÁGINA
-# -----------------------------------------------------------------------------
+# Configuração da página
 st.set_page_config(
     page_title="Sistema de Avaliação e PDI",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# -----------------------------------------------------------------------------
-# 2. CSS RESPONSIVO E CORREÇÃO DE TEMA (MODIFICADO AQUI)
-# -----------------------------------------------------------------------------
-# Removemos o Javascript e o Python que tentava adivinhar o tema.
-# Usamos CSS nativo com variáveis para controlar as cores.
-
-st.markdown("""
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-    /* DEFINIÇÃO DE VARIÁVEIS DE CORES (LIGHT VS DARK) */
-    :root {
-        --primary-font: 'Montserrat', 'Segoe UI', sans-serif;
-        
-        /* Cores LIGHT (Padrão) */
-        --bg-color: #FAFAFA;
-        --text-primary: #000000;
-        --text-secondary: #4c4c4c;
-        --header-bg: linear-gradient(135deg, #F5F5F5 0%, #FFFFFF 100%);
-        --header-text: #000000;
-        --header-subtext: #4c4c4c;
-        --border-color: #E0E0E0;
-        --logo-filter: none;
+# Detectar tema automaticamente (sem UI adicional)
+st.markdown(
+        """
+<script>
+(function() {
+    function getTheme() {
+        const doc = window.parent.document;
+        const dataTheme = doc.documentElement.getAttribute('data-theme') || doc.body.getAttribute('data-theme');
+        if (dataTheme) return dataTheme.toLowerCase();
+        const className = (doc.body.className || '').toLowerCase();
+        if (className.includes('dark')) return 'dark';
+        if (className.includes('light')) return 'light';
+        return 'light';
     }
 
-    /* Cores DARK (Automático pelo navegador) */
-    @media (prefers-color-scheme: dark) {
-        :root {
-            --bg-color: #0E1117;
-            --text-primary: #FFFFFF;
-            --text-secondary: #CCCCCC;
-            --header-bg: linear-gradient(135deg, #262730 0%, #1a1c24 100%);
-            --header-text: #FFFFFF;
-            --header-subtext: #BDBDBD;
-            --border-color: #4A4A4A;
-            /* Inverte as cores da logo se ela for escura */
-            --logo-filter: invert(1) brightness(2); 
+    function applyThemeParam() {
+        const theme = getTheme();
+        const url = new URL(window.parent.location.href);
+        if (url.searchParams.get('theme') !== theme) {
+            url.searchParams.set('theme', theme);
+            window.parent.location.replace(url.toString());
         }
     }
 
-    /* APLICAÇÃO GERAL */
-    html, body, [class*="css"] {
-        font-family: var(--primary-font);
-    }
+    const doc = window.parent.document;
+    const observer = new MutationObserver(applyThemeParam);
+    observer.observe(doc.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+    observer.observe(doc.body, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+    applyThemeParam();
+})();
+</script>
+""",
+        unsafe_allow_html=True,
+)
 
-    /* Forçar containers do Streamlit a usar nossas variáveis */
-    [data-testid="stAppViewContainer"] {
-        color: var(--text-primary) !important;
-    }
-    
-    /* Header Customizado */
-    .header-wrapper {
-        background: var(--header-bg);
-        padding: 20px 30px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    
-    .header-text h1 {
-        color: var(--header-text) !important;
-        margin: 0;
-        font-weight: 700;
-        font-size: 2rem;
-        letter-spacing: 0.5px;
-    }
-    
-    .header-text p {
-        color: var(--header-subtext) !important;
-        margin: 8px 0 0 0;
-        font-size: 0.95rem;
-        opacity: 0.95;
-        font-weight: 400;
-    }
+theme_param = st.query_params.get("theme", "light")
+theme_param = str(theme_param).lower()
+_theme_base = "dark" if theme_param == "dark" else "light"
 
-    /* Logo responsivo */
-    .logo-img {
-        filter: var(--logo-filter);
-        transition: filter 0.3s ease;
-    }
+# Configurar cores baseado no tema do Streamlit
+if _theme_base == "dark":
+        _header_bg = "linear-gradient(135deg, #1a1a1a 0%, #000000 100%)"
+        _header_text = "#FFFFFF"
+        _header_subtext = "#CCCCCC"
+        _text_primary = "#FFFFFF"
+        _text_secondary = "#BDBDBD"
+        _logo_file = "logo_dark.png"
+else:
+        _header_bg = "linear-gradient(135deg, #F5F5F5 0%, #FFFFFF 100%)"
+        _header_text = "#000000"
+        _header_subtext = "#4c4c4c"
+        _text_primary = "#000000"
+        _text_secondary = "#4c4c4c"
+        _logo_file = "logo_light.png"
 
-    /* Section Headers */
-    .section-header {
-        color: var(--text-primary) !important;
-        border-bottom: 3px solid #FF6600;
-        padding-bottom: 12px;
-        margin-bottom: 20px;
-        margin-top: 20px;
-        font-weight: 700;
-        font-size: 1.3rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
+# Fallback se logo específico não existir
+if not Path(_logo_file).exists():
+        _logo_file = "logo.png"
 
-    /* Inputs e Text Areas - Correção Crítica para Dark Mode */
-    .stTextInput input, .stSelectbox div[data-baseweb="select"] > div, .stTextArea textarea, .stDateInput input {
-        color: var(--text-primary) !important;
-        background-color: transparent !important; 
-        border: 1px solid var(--border-color) !important;
-    }
-    
-    /* Métricas */
-    [data-testid="stMetricLabel"] { color: var(--text-secondary) !important; }
-    [data-testid="stMetricValue"] { color: var(--text-primary) !important; }
-
-    /* Subtítulos Coloridos */
-    .subtitle-green { color: #4CAF50 !important; font-weight: 700; }
-    .subtitle-red { color: #F44336 !important; font-weight: 700; }
-    .subtitle-blue { color: #2196F3 !important; font-weight: 700; margin-top: 20px; }
-    .subtitle-dark { color: var(--text-primary) !important; font-weight: 700; }
-
-    /* Badges */
-    .status-high { background-color: rgba(27, 94, 32, 0.1); color: #4CAF50; padding: 10px 18px; border-radius: 20px; font-weight: 600; border: 1px solid #4CAF50; display: inline-block;}
-    .status-medium { background-color: rgba(230, 81, 0, 0.1); color: #FF9800; padding: 10px 18px; border-radius: 20px; font-weight: 600; border: 1px solid #FF9800; display: inline-block;}
-    .status-low { background-color: rgba(198, 40, 40, 0.1); color: #F44336; padding: 10px 18px; border-radius: 20px; font-weight: 600; border: 1px solid #F44336; display: inline-block;}
-    
-    /* Botões */
-    .stButton > button {
-        background: linear-gradient(135deg, #FF6600 0%, #E65100 100%);
-        color: white !important;
-        border: none;
-        font-weight: 600;
-        padding: 12px 24px;
-        border-radius: 6px;
-        text-transform: uppercase;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# -----------------------------------------------------------------------------
-# 3. FUNÇÕES (MANTIDAS EXATAMENTE COMO NO ORIGINAL)
-# -----------------------------------------------------------------------------
-
+# Configuração do Google Sheets
 SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
     'https://www.googleapis.com/auth/drive'
@@ -673,38 +596,308 @@ def gerar_pdf_relatorio_pdi(dados, colaboradores_ids=None, theme_base="light"):
     buffer.close()
     return pdf_bytes
 
-# -----------------------------------------------------------------------------
-# 4. RENDERIZAÇÃO DO CABEÇALHO (MODIFICADO PARA CSS PURO)
-# -----------------------------------------------------------------------------
+_css_base = """
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+    /* Cores corporativas SATTE ALAM */
+    :root {
+        --primary-color: #000000;
+        --secondary-color: #FFFFFF;
+        --accent-color: #FF6600;
+        --support-color: #4c4c4c;
+        --text-primary: $text_primary;
+        --text-secondary: $text_secondary;
+        --bg-light: #FAFAFA;
+        --border-color: #E0E0E0;
+        --header-bg: $header_bg;
+        --header-text: $header_text;
+        --header-subtext: $header_subtext;
+    }
+    
+    /* Aplicar cores de texto baseadas no tema */
+    [data-testid="stAppViewContainer"],
+    [data-testid="stAppViewContainer"] p,
+    [data-testid="stAppViewContainer"] span,
+    [data-testid="stAppViewContainer"] label,
+    [data-testid="stAppViewContainer"] div,
+    [data-testid="stAppViewContainer"] h1,
+    [data-testid="stAppViewContainer"] h2,
+    [data-testid="stAppViewContainer"] h3,
+    [data-testid="stAppViewContainer"] h4 {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Forçar cor em inputs e text areas */
+    input, textarea, select {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Fonte personalizada - Montserrat */
+    * {
+        font-family: 'Montserrat', 'Segoe UI', sans-serif;
+    }
+    
+    body {
+        font-family: 'Montserrat', 'Segoe UI', sans-serif;
+    }
+    
+    /* Header section */
+    .header-section {
+        background: var(--header-bg);
+        padding: 40px;
+        border-radius: 12px;
+        color: var(--header-text);
+        margin-bottom: 30px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 30px;
+    }
+    
+    /* Metric labels: respeitar tema light/dark */
+    [data-testid="stMetricLabel"] {
+        background-color: transparent;
+        color: var(--text-primary);
+    }
+
+    [data-testid="stMetricValue"] {
+        color: var(--text-primary);
+    }
+    
+    /* Estilo para o container da logo */
+    .logo-container {
+        background: var(--header-bg);
+        padding: 20px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .header-container {
+        background: var(--header-bg);
+        padding: 20px 30px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
+    
+    /* Metric cards */
+    .metric-card {
+        background: linear-gradient(135deg, #F5F5F5 0%, #FFFFFF 100%);
+        padding: 20px;
+        border-radius: 10px;
+        border-left: 4px solid #FF6600;
+        margin: 10px 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        color: var(--text-primary);
+    }
+    
+    /* Section headers */
+    .section-header {
+        color: var(--text-primary) !important;
+        border-bottom: 3px solid #FF6600;
+        padding-bottom: 12px;
+        margin-bottom: 20px;
+        margin-top: 20px;
+        font-weight: 700;
+        font-size: 1.3rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Títulos sub-seção - respeitam tema */
+    .subtitle-green,
+    .subtitle-red,
+    .subtitle-blue,
+    .subtitle-dark {
+        color: var(--text-primary) !important;
+        font-weight: 700 !important;
+    }
+
+    .subtitle-blue {
+        margin-top: 20px !important;
+    }
+
+    .subtitle-green,
+    .subtitle-red,
+    .subtitle-dark {
+        margin-top: 0 !important;
+    }
+    
+    /* Exceções para manter cores específicas */
+    .stButton button {
+        color: white !important;
+    }
+    
+    .status-high {
+        color: #1B5E20 !important;
+    }
+    
+    .status-medium {
+        color: #E65100 !important;
+    }
+    
+    .status-low {
+        color: #C62828 !important;
+    }
+
+    /* Labels e valores de métricas */
+    [data-testid="stMetricLabel"],
+    [data-testid="stMetricValue"] {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Status badges */
+    .status-high {
+        background-color: #E8F5E9;
+        color: #1B5E20;
+        padding: 10px 18px;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+        border: 2px solid #4CAF50;
+    }
+    
+    .status-medium {
+        background-color: #FFF3E0;
+        color: #E65100;
+        padding: 10px 18px;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+        border: 2px solid #FF6600;
+    }
+    
+    .status-low {
+        background-color: #FFEBEE;
+        color: #C62828;
+        padding: 10px 18px;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+        border: 2px solid #D32F2F;
+    }
+    
+    /* Buttons */
+    .stButton > button {
+        background: linear-gradient(135deg, #FF6600 0%, #E65100 100%);
+        color: white;
+        border: none;
+        font-weight: 600;
+        padding: 12px 24px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-family: 'Montserrat', sans-serif;
+    }
+    
+    .stButton > button:hover {
+        box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
+        transform: translateY(-2px);
+    }
+    
+    /* Inputs */
+    .stTextInput > div > div > input,
+    .stSelectbox > div > div > select,
+    .stTextArea > div > div > textarea {
+        border: 2px solid #E0E0E0 !important;
+        border-radius: 6px;
+        font-family: 'Montserrat', sans-serif;
+        color: var(--text-primary) !important;
+        background-color: transparent !important;
+    }
+    
+    .stTextInput > div > div > input:focus,
+    .stSelectbox > div > div > select:focus,
+    .stTextArea > div > div > textarea:focus {
+        border-color: #FF6600 !important;
+        box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1) !important;
+    }
+    
+    /* Divider */
+    hr {
+        border-color: #E0E0E0;
+        margin: 30px 0;
+    }
+    
+    /* Sidebar - removido para manter tema padrão do Streamlit */
+    
+    /* DataFrame styling */
+    .dataframe {
+        font-family: 'Montserrat', sans-serif;
+    }
+    
+    /* Info/Success/Error boxes */
+    .stAlert {
+        border-radius: 6px;
+        margin: 10px 0;
+    }
+</style>
+"""
+
+# CSS customizado com identidade visual SATTE ALAM MOTORS
+st.markdown(
+    Template(_css_base).substitute(
+        header_bg=_header_bg,
+        header_text=_header_text,
+        header_subtext=_header_subtext,
+        text_primary=_text_primary,
+        text_secondary=_text_secondary,
+    ),
+    unsafe_allow_html=True,
+)
 
 # Título principal
 st.markdown("""
 <style>
-/* CSS Extra para o layout do cabeçalho */
 .header-wrapper {
-    /* As cores agora vêm das variáveis definidas no bloco CSS principal */
+    background: var(--header-bg);
+    padding: 20px 30px;
+    border-radius: 12px;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
     gap: 20px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
+.header-text h1 {
+    color: var(--header-text);
+    margin: 0;
+    font-weight: 700;
+    font-size: 2rem;
+    letter-spacing: 0.5px;
+}
+.header-text p {
+    color: var(--header-subtext);
+    margin: 8px 0 0 0;
+    font-size: 0.95rem;
+    opacity: 0.95;
+    font-weight: 400;
+}
 </style>
-
 <div class="header-wrapper">
-    <div style="flex: 0 0 auto;">
-        <img src="app/static/logo_light.png" class="logo-img" style="max-width: 180px; height: auto;" onerror="this.src='app/static/logo.png'; this.onerror=null;">
-    </div>
-    <div class="header-text" style="flex: 1;">
+    <div style="flex: 1;">
+""", unsafe_allow_html=True)
+
+try:
+    col_logo, col_text = st.columns([0.8, 3])
+    with col_logo:
+        st.image(_logo_file, width=180)
+    with col_text:
+        st.markdown("""
+        <div class="header-text">
+            <h1>SISTEMA DE AVALIAÇÃO E PDI</h1>
+            <p>Gestão de Performance e Desenvolvimento Individual | SATTE ALAM MOTORS</p>
+        </div>
+        """, unsafe_allow_html=True)
+except FileNotFoundError:
+    st.markdown("""
+    <div class="header-text">
         <h1>SISTEMA DE AVALIAÇÃO E PDI</h1>
         <p>Gestão de Performance e Desenvolvimento Individual | SATTE ALAM MOTORS</p>
     </div>
-</div>
-""", unsafe_allow_html=True)
-
-
-# -----------------------------------------------------------------------------
-# 5. LÓGICA DO APP (SIDEBAR E PÁGINAS - MANTIDO ORIGINAL)
-# -----------------------------------------------------------------------------
+    """, unsafe_allow_html=True)
 
 # Sidebar para gerenciar colaboradores
 st.sidebar.title("GERENCIAMENTO")
